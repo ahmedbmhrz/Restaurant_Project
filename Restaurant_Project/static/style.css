@@ -1,0 +1,22 @@
+:root {
+    --nexus-teal: #00b4b4;
+    --nexus-dark: #1f2937;
+}
+
+.nexus-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+.nexus-btn {
+    background-color: var(--nexus-teal);
+    color: white;
+    border-radius: 50px; /* Pill shape */
+    transition: transform 0.2s;
+}
+
+.nexus-btn:hover {
+    transform: scale(1.02);
+    background-color: #009e9e;
+}
