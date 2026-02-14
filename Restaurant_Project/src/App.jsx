@@ -1,23 +1,19 @@
-import { Navbar } from "@/components/Navbar"
-import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
+import Home from "./pages/home"
+import Branches from "./pages/Branches"
+import AIPrediction from "./pages/AIPrediction"
+
 
 function App() {
   return (
-    <div className="min-h-svh flex flex-col bg-muted/50">
-      <Navbar />
-      <main className="flex-1 p-6 md:p-10 flex flex-col items-center">
-        <Card className="w-full max-w-6xl shadow-md min-h-[500px]">
-
-        </Card>
-      </main>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/home" />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/branches" element={<Branches />} />
+        <Route path="/ai-prediction" element={<AIPrediction />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
