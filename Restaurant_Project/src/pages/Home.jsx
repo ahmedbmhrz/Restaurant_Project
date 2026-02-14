@@ -10,6 +10,13 @@ import {
 } from "@/components/ui/card"
 import { ChartContainer } from "@/components/ui/chart"
 import { Bar, BarChart, XAxis, Cell } from "recharts"
+import { Info } from "lucide-react"
+import {
+    Alert,
+    AlertDescription,
+    AlertTitle,
+} from "@/components/ui/alert"
+
 const chartData = [
     { branchName: "A", income: 7186, increase: "+10%" },
     { branchName: "B", income: 3205, increase: "+5%" },
@@ -36,12 +43,8 @@ function Home() {
         <div className="min-h-svh flex flex-col bg-muted/90">
             <Navbar />
             <main className="flex-1 p-6 md:p-10 space-y-6">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-3xl font-bold tracking-tight"> Dashboard </h2>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-7">
-                    <Card className="col-span-3 min-w-3xl">
+                <div className="flex flex-col lg:flex-row gap-4">
+                    <Card className="flex-none lg:w-3xl">
                         <CardHeader>
                             <CardTitle className="text-2xl">Income Branch Tracker</CardTitle>
                         </CardHeader>
@@ -79,15 +82,28 @@ function Home() {
 
 
                                         ))}
-
                                     </Bar>
-
                                 </BarChart>
                             </ChartContainer>
                         </CardContent>
-
                     </Card>
+                    <div className="flex-1">
+                        <h2>Notification</h2>
+                        <Alert>
+                            <Info className="h-4 w-4" />
+                            <AlertTitle>Heads up!</AlertTitle>
+                            <AlertDescription>
+                                hello there hello
+                                <div className="mt-2">
+                                    <Button variant="outline" size="sm">Enable</Button>
+                                </div>
+                            </AlertDescription>
+                        </Alert>
+                    </div>
                 </div>
+
+
+
 
             </main>
         </div>
