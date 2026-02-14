@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Navbar } from "@/components/Navbar"
 import { Button } from "@/components/ui/button"
 import {
@@ -8,48 +9,29 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { ChartContainer } from "@/components/ui/chart"
-import { Bar, BarChart, XAxis } from "recharts"
+import { Bar, BarChart, XAxis, Cell } from "recharts"
 const chartData = [
-    { branchName: "A", income: 7186, },
-    { branchName: "B", income: 3205, },
-    { branchName: "C", income: 5037 },
-    { branchName: "D", income: 2037 },
-    { branchName: "E", income: 9037 },
+    { branchName: "A", income: 7186, increase: "+10%" },
+    { branchName: "B", income: 3205, increase: "+5%" },
+    { branchName: "C", income: 5037, increase: "+12%" },
+    { branchName: "D", income: 2037, increase: "-2%" },
+    { branchName: "E", income: 9037, increase: "+20%" },
+    { branchName: "F", income: 6400, increase: "+15%" },
+    { branchName: "G", income: 4200, increase: "+8%" },
 
 ]
 const chartConfig = {
     income: {
         label: "Income",
-        color: "#2563eb",
+        color: "#00ADB5",
     },
-}
-/* Circle Background for the text under the bar */
-const CircleBackgrund = (props) => {
-    const { x, y, payload } = props;
-    return (
-        <g transform={`translate(${x},${y})`}>
-            {/* The Circle Background */}
-            <circle cx="0" cy="0" r="15" fill="#333" />
-            {/* The Text (Centered) */}
-            <text
-                x="0"
-                y="0"
-                dy={5}
-                textAnchor="middle"
-                fill="#fff"
-                fontSize={12}
-
-            >
-                {payload.value}
-            </text>
-
-        </g>
-    )
 }
 
 
 
 function Home() {
+    const [activeBranch, setActiveBranch] = useState(chartData[0])
+
     return (
         <div className="min-h-svh flex flex-col bg-muted/90">
             <Navbar />
@@ -65,9 +47,11 @@ function Home() {
                         </CardHeader>
                         <CardContent className="pl-2 flex flex-row items-end justify-between">
                             <div className="flex flex-col space-y-2 p-5">
-                                <h3 className="text-3xl font-bold">10%</h3>
+                                <h3 className="text-3xl font-bold">
+                                    {activeBranch ? activeBranch.increase : "Select a branch"}
+                                </h3>
                                 <p className="text-sm text-muted-foreground w-32">
-                                    Higher than last month
+                                    Branch {activeBranch ? activeBranch.branchName : "--"} vs last month
                                 </p>
                             </div>
                             <ChartContainer config={chartConfig} className="min-h-52 w-96">
@@ -84,7 +68,20 @@ function Home() {
                                         fill="var(--color-income)"
                                         radius={15}
                                         barSize={30}
-                                    />
+                                        onClick={(data) => setActiveBranch(data.payload)}
+                                        cursor="pointer" // Changes mouse to a hand pointer
+                                    >
+                                        {chartData.map((entry, index) => (
+                                            <Cell
+                                                key={`cell-${index}`}
+                                                fill={activeBranch.branchName === entry.branchName ? "var(--color-income)" : "#e5e7eb"}
+                                            />
+
+
+                                        ))}
+
+                                    </Bar>
+
                                 </BarChart>
                             </ChartContainer>
                         </CardContent>
