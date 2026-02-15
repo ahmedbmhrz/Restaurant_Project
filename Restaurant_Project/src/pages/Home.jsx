@@ -162,50 +162,75 @@ function Home() {
 
                     </div>
                 </div>
-                <div className="flex-1">
-                    <h2 className="text-xl font-bold mb-4">Branch Manager</h2>
-                    <ScrollArea className="h-48 w-1/3 rounded-md border-2 p-4">
-                        <div className="flex flex-col gap-6">
-                            <Card className="p-4">
-                                <div className="flex items-center gap-4">
-                                    <Avatar className="h-12 w-12">
-                                        <AvatarImage src="https://github.com/shadcn.png" />
-                                        <AvatarFallback>CN</AvatarFallback>
-                                    </Avatar>
+                <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="flex-1">
+                        <h2 className="text-xl font-bold mb-4">Branch Manager</h2>
+                        <ScrollArea className="h-48 w-full rounded-md border-2 p-4">
+                            <div className="flex flex-col gap-6">
+                                <Card className="p-4">
+                                    <div className="flex items-center gap-4">
+                                        <Avatar className="h-12 w-12">
+                                            <AvatarImage src="https://github.com/shadcn.png" />
+                                            <AvatarFallback>CN</AvatarFallback>
+                                        </Avatar>
 
-                                    <div className="flex-1">
-                                        <h4 className="font-semibold"> Ahmed</h4>
-                                        <p className="text-muted-foreground">Manger</p>
+                                        <div className="flex-1">
+                                            <h4 className="font-semibold"> Ahmed</h4>
+                                            <p className="text-muted-foreground">Manger</p>
+                                        </div>
+
+                                        <Button variant="outline">Profile</Button>
                                     </div>
-
-                                    <Button variant="outline">Profile</Button>
-                                </div>
-                                <div className="mt-2 text-muted-foreground">
-                                    this manger has increased income for barnh A by 10%
-                                </div>
-                            </Card>
-
-                            <Card className="p-4">
-                                <div className="flex items-center gap-4">
-                                    <Avatar className="h-12 w-12">
-                                        <AvatarImage src="https://github.com/shadcn.png" />
-                                        <AvatarFallback>CN</AvatarFallback>
-                                    </Avatar>
-
-                                    <div className="flex-1">
-                                        <h4 className="font-semibold"> Ahmed</h4>
-                                        <p className="text-muted-foreground">Manger</p>
+                                    <div className="mt-2 text-muted-foreground">
+                                        this manger has increased income for barnh A by 10%
                                     </div>
+                                </Card>
 
-                                    <Button variant="outline">Profile</Button>
-                                </div>
-                                <div className="mt-2 text-muted-foreground">
-                                    this manger has increased income for barnh A by 10%
-                                </div>
-                            </Card>
-                        </div>
-                    </ScrollArea>
+                                <Card className="p-4">
+                                    <div className="flex items-center gap-4">
+                                        <Avatar className="h-12 w-12">
+                                            <AvatarImage src="https://github.com/shadcn.png" />
+                                            <AvatarFallback>CN</AvatarFallback>
+                                        </Avatar>
+
+                                        <div className="flex-1">
+                                            <h4 className="font-semibold"> Ahmed</h4>
+                                            <p className="text-muted-foreground">Manger</p>
+                                        </div>
+
+                                        <Button variant="outline">Profile</Button>
+                                    </div>
+                                    <div className="mt-2 text-muted-foreground">
+                                        this manger has increased income for barnh A by 10%
+                                    </div>
+                                </Card>
+                            </div>
+                        </ScrollArea>
+                    </div>
+                    <Card className="flex-1 flex flex-col bg-gray-300 border-1 border-black">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-lg font-medium">
+                                Prediction
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col justify-between flex-1 gap-4">
+                            <div className="bg-muted/80 p-4 rounded-lg border">
+                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                    Branch A and C are projected to have better income next month based on current trends.
+                                </p>
+                            </div>
+                            <Button variant="secondary" className="w-full justify-between bg-muted/80">
+                                More predictions
+                                <span className="text-xs opacity-50">→</span>
+                            </Button>
+                        </CardContent>
+                    </Card>
+
+                    <Card className="flex-1">
+                        <CardContent>hello there </CardContent>
+                    </Card>
                 </div>
+
 
 
 
