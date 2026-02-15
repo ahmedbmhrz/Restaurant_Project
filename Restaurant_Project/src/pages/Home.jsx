@@ -20,6 +20,10 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { TriangleAlert } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
+import { Progress } from "@/components/ui/progress"
+
+
+
 
 const notifications = [
     {
@@ -207,7 +211,7 @@ function Home() {
                             </div>
                         </ScrollArea>
                     </div>
-                    <Card className="flex-1 flex flex-col bg-gray-300 border-1 border-black">
+                    <Card className="flex-1 flex flex-col bg-gray-300 border-1 border-black ">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-lg font-medium">
                                 Prediction
@@ -227,13 +231,23 @@ function Home() {
                     </Card>
 
                     <Card className="flex-1">
-                        <CardContent>hello there </CardContent>
+                        <CardHeader>
+                            <CardTitle>Income target progress</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground leading-relaxed" >you need to have total of 17500$ income per month to
+                                reach this year target </p>
+
+                            <div className="w-full max-w-sm space-y-2 pt-9">
+                                <div className="flex justify-between text-sm font-medium">
+                                    <label htmlFor="progress-upload">Upload progress</label>
+                                    <span className="text-muted-foreground">66%</span>
+                                </div>
+                                <Progress value={66} className="h-7 [&>*]:bg-[#00ADB5]" id="progress-upload" />
+                            </div>
+                        </CardContent>
                     </Card>
                 </div>
-
-
-
-
             </main>
         </div>
     )
