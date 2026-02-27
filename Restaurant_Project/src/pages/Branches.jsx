@@ -19,9 +19,12 @@ function Branches() {
         <div className="h-screen flex flex-col bg-muted/90 overflow-hidden">
             <Navbar />
             <main className="flex-1 p-6 md:p-10 flex flex-col lg:flex-row gap-6 h-[calc(100vh-64px)] overflow-hidden">
-                <div className="flex-3 h-full overflow-hidden">
-                    <ScrollArea className="h-full pr-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-10">
+                <Card className="flex-3 h-full flex flex-col min-h-0 overflow-hidden border-none shadow-xl bg-background/50 backdrop-blur-sm">
+                    <div className="p-6 border-b bg-card/50 flex-none">
+                        <h2 className="text-xl font-bold tracking-tight">Branch Insights</h2>
+                    </div>
+                    <ScrollArea className="flex-1 min-h-0 px-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6">
                             <Branch data={db.branchData} />
                             <Manager manager={db.managers.find(m => m.isTopManager)} />
                             <Income data={db.incomeData} />
@@ -29,8 +32,8 @@ function Branches() {
                             <Charts />
                         </div>
                     </ScrollArea>
-                </div>
-                <div className="flex-1 min-w-[350px] h-full overflow-hidden">
+                </Card>
+                <div className="flex-1 min-w-[350px] h-full min-h-0 overflow-hidden">
                     <ManagersnBranch managers={db.managers} />
                 </div>
             </main>
