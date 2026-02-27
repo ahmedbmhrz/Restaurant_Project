@@ -46,5 +46,24 @@ export const db = {
             growth: 9.2,
             isTopManager: false
         }
-    ]
+    ],
+    incomeData: {
+        total: 128430,
+        currency: "$",
+        trend: "+15.2%",
+        history: [
+            { day: "Mon", amount: 15200 },
+            { day: "Tue", amount: 18400 },
+            { day: "Wed", amount: 16800 },
+            { day: "Thu", amount: 21000 },
+            { day: "Fri", amount: 24500 },
+            { day: "Sat", amount: 28900 },
+            { day: "Sun", amount: 26300 }
+        ],
+        breakdown: [
+            { label: "Net Profit", value: "$98,200", color: "bg-emerald-500" },
+            { label: "Tax (15%)", value: "$19,264", color: "bg-blue-500" },
+            { label: "Tips/Fees", value: "$10,966", color: "bg-amber-500" }
+        ]
+    }
 };

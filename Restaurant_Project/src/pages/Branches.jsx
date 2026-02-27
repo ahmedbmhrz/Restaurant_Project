@@ -16,19 +16,21 @@ import { db } from "../data/db"
 
 function Branches() {
     return (
-        <div className="min-h-svh flex flex-col bg-muted/90">
+        <div className="h-screen flex flex-col bg-muted/90 overflow-hidden">
             <Navbar />
-            <main className="flex-1 p-6 md:p-10 flex flex-col lg:flex-row gap-6 h-[calc(100vh-80px)] overflow-hidden">
-                <ScrollArea className="flex-3 h-full rounded-md ">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-20">
-                        <Branch data={db.branchData} />
-                        <Manager manager={db.managers.find(m => m.isTopManager)} />
-                        <Income />
-                        <Menu />
-                        <Charts />
-                    </div>
-                </ScrollArea>
-                <div className="flex-1 min-w-[350px]">
+            <main className="flex-1 p-6 md:p-10 flex flex-col lg:flex-row gap-6 h-[calc(100vh-64px)] overflow-hidden">
+                <div className="flex-3 h-full overflow-hidden">
+                    <ScrollArea className="h-full pr-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-10">
+                            <Branch data={db.branchData} />
+                            <Manager manager={db.managers.find(m => m.isTopManager)} />
+                            <Income data={db.incomeData} />
+                            <Menu />
+                            <Charts />
+                        </div>
+                    </ScrollArea>
+                </div>
+                <div className="flex-1 min-w-[350px] h-full overflow-hidden">
                     <ManagersnBranch managers={db.managers} />
                 </div>
             </main>
