@@ -28,8 +28,8 @@ function Branches() {
                             <Branch data={db.branchData} />
                             <Manager manager={db.managers.find(m => m.isTopManager)} />
                             <Income data={db.incomeData} />
-                            <Menu />
-                            <Charts />
+                            <Menu data={db.menuData} />
+                            <Charts data={db.operationalData} />
                         </div>
                     </ScrollArea>
                 </Card>
