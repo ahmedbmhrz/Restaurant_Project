@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export function ManagerCard({ name, role, avatarSrc, avatarFallback, achievement }) {
     return (
-        <Card className="p-4 bg-muted/50 border-none">
+        <Card className="p-4 bg-white border-none">
             <div className="flex items-center gap-4">
                 <Avatar className="h-10 w-10">
                     <AvatarImage src={avatarSrc} />

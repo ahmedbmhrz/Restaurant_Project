@@ -45,6 +45,66 @@ export const db = {
             performance: 4.8,
             growth: 9.2,
             isTopManager: false
+        },
+        {
+            id: "mgr-3",
+            name: "Sara",
+            role: "Regional Manager",
+            avatarSrc: "https://github.com/shadcn.png",
+            avatarFallback: "SA",
+            achievement: "Top performing branch in Q4",
+            tenure: "4.5 Years",
+            performance: 4.8,
+            growth: 9.2,
+            isTopManager: false
+        },
+        {
+            id: "mgr-3",
+            name: "Sara",
+            role: "Regional Manager",
+            avatarSrc: "https://github.com/shadcn.png",
+            avatarFallback: "SA",
+            achievement: "Top performing branch in Q4",
+            tenure: "4.5 Years",
+            performance: 4.8,
+            growth: 9.2,
+            isTopManager: false
+        },
+        {
+            id: "mgr-3",
+            name: "Sara",
+            role: "Regional Manager",
+            avatarSrc: "https://github.com/shadcn.png",
+            avatarFallback: "SA",
+            achievement: "Top performing branch in Q4",
+            tenure: "4.5 Years",
+            performance: 4.8,
+            growth: 9.2,
+            isTopManager: false
+        },
+        {
+            id: "mgr-3",
+            name: "Sara",
+            role: "Regional Manager",
+            avatarSrc: "https://github.com/shadcn.png",
+            avatarFallback: "SA",
+            achievement: "Top performing branch in Q4",
+            tenure: "4.5 Years",
+            performance: 4.8,
+            growth: 9.2,
+            isTopManager: false
+        },
+        {
+            id: "mgr-3",
+            name: "Sara",
+            role: "Regional Manager",
+            avatarSrc: "https://github.com/shadcn.png",
+            avatarFallback: "SA",
+            achievement: "Top performing branch in Q4",
+            tenure: "4.5 Years",
+            performance: 4.8,
+            growth: 9.2,
+            isTopManager: false
         }
     ],
     incomeData: {

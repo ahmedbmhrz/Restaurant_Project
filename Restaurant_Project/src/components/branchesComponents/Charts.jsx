@@ -31,7 +31,7 @@ export function Charts({ data }) {
                         <TabsTrigger value="depts" className="rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
                             Depts
                         </TabsTrigger>
-                        <TabsTrigger value="activity" className="rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
+                        <TabsTrigger value="activity" className=" rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all data-[state=active]:bg-indigo-600 data-[state=active]:text-white">
                             Feed
                         </TabsTrigger>
                     </TabsList>
@@ -57,7 +57,7 @@ export function Charts({ data }) {
 
                         <TabsContent value="activity" className="flex-1 data-[state=inactive]:hidden focus-visible:outline-none">
                             <div className="flex items-center justify-between mb-2">
-                                <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Live Feed</div>
+                                <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ">Live Feed</div>
                                 <Clock className="h-3 w-3 text-indigo-500" />
                             </div>
                             <ActivityLog activity={data.activity} />

@@ -19,58 +19,61 @@ function Branches() {
     return (
         <div className="h-screen flex flex-col bg-muted/90 overflow-hidden">
             <Navbar />
-            <main className="flex-1 p-6 md:p-10 flex flex-col lg:flex-row gap-6 h-[calc(100vh-64px)] overflow-hidden">
-                <Card className="flex-3 h-full flex flex-col min-h-0 overflow-hidden border-none shadow-xl bg-background/50 backdrop-blur-sm">
-                    <div className="p-6 border-b bg-card/50 flex-none">
-                        <h2 className="text-xl font-bold tracking-tight">Branch Insights</h2>
+            <main className="flex-1 p-6 md:p-10 flex flex-col gap-6 h-[calc(100vh-64px)] overflow-hidden">
+                <Card className="flex-1 flex flex-col min-h-0 overflow-hidden border-none shadow-2xl bg-background/60 backdrop-blur-2xl rounded-3xl p-8 gap-8">
+                    <div className="flex-none border-b pb-6">
+                        <h2 className="text-4xl font-extrabold tracking-tight text-primary">Branch Insights</h2>
                     </div>
-                    <Tabs defaultValue="branch" className="flex-1 flex flex-col min-h-0">
-                        <div className="px-6 border-b bg-card/30 backdrop-blur-md sticky top-0 z-10">
-                            <TabsList className="bg-transparent border-none p-0 gap-8 h-12 center">
-                                <TabsTrigger value="branch" className="   text-muted-foreground data-[state=active]:text-primary  data-[state=active]:shadow-none data-[state=active]:bg-gray-100 transition-all duration-200 hover:text-primary/70">
-                                    <LayoutDashboard className="h-4 w-4" />
-                                    <span>Branch Explorer</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="manager" className="  text-muted-foreground data-[state=active]:text-primary  data-[state=active]:shadow-none data-[state=active]:bg-gray-100 transition-all duration-200 hover:text-primary/70">
-                                    <Users className="h-4 w-4" />
-                                    <span>Manager Info</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="income" className="  text-muted-foreground data-[state=active]:text-primary  data-[state=active]:shadow-none data-[state=active]:bg-gray-100 transition-all duration-200 hover:text-primary/70">
-                                    <DollarSign className="h-4 w-4" />
-                                    <span>Income</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="menu" className="  text-muted-foreground data-[state=active]:text-primary  data-[state=active]:shadow-none data-[state=active]:bg-gray-100 transition-all duration-200 hover:text-primary/70">
-                                    <Utensils className="h-4 w-4" />
-                                    <span>Menu View</span>
-                                </TabsTrigger>
-                                <TabsTrigger value="charts" className="  text-muted-foreground data-[state=active]:text-primary  data-[state=active]:shadow-none data-[state=active]:bg-gray-100 transition-all duration-200 hover:text-primary/70">
-                                    <BarChart3 className="h-4 w-4" />
-                                    <span>Charts</span>
-                                </TabsTrigger>
-                            </TabsList>
+                    <div className="flex-1 flex flex-col lg:flex-row gap-8 min-h-0 overflow-hidden">
+                        <Tabs defaultValue="branch" orientation="vertical" className="flex-1 flex min-h-0 bg-gray-100 backdrop-blur-md rounded-2xl shadow-sm overflow-hidden border border-white/20">
+                            <div className="w-64 border-r bg-muted/10 backdrop-blur-md sticky top-0 z-10 border-white/10">
+                                <TabsList className="flex flex-col bg-transparent border-none p-4 gap-2 h-auto w-full">
+                                    <TabsTrigger value="branch" className="justify-start inline-flex items-center gap-2 text-muted-foreground data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:bg-background/80 transition-all duration-300 hover:text-primary/70 px-4 py-3 rounded-xl w-full">
+                                        <LayoutDashboard className="h-5 w-5" />
+                                        <span className="font-medium">Branch Explorer</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="manager" className="justify-start inline-flex items-center gap-2 text-muted-foreground data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:bg-background/80 transition-all duration-300 hover:text-primary/70 px-4 py-3 rounded-xl w-full">
+                                        <Users className="h-5 w-5" />
+                                        <span className="font-medium">Manager Info</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="income" className="justify-start inline-flex items-center gap-2 text-muted-foreground data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:bg-background/80 transition-all duration-300 hover:text-primary/70 px-4 py-3 rounded-xl w-full">
+                                        <DollarSign className="h-5 w-5" />
+                                        <span className="font-medium">Income</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="menu" className="justify-start inline-flex items-center gap-2 text-muted-foreground data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:bg-background/80 transition-all duration-300 hover:text-primary/70 px-4 py-3 rounded-xl w-full">
+                                        <Utensils className="h-5 w-5" />
+                                        <span className="font-medium">Menu View</span>
+                                    </TabsTrigger>
+                                    <TabsTrigger value="charts" className="justify-start inline-flex items-center gap-2 text-muted-foreground data-[state=active]:text-primary data-[state=active]:shadow-lg data-[state=active]:bg-background/80 transition-all duration-300 hover:text-primary/70 px-4 py-3 rounded-xl w-full">
+                                        <BarChart3 className="h-5 w-5" />
+                                        <span className="font-medium">Charts</span>
+                                    </TabsTrigger>
+                                </TabsList>
+                            </div>
+                            <div className="flex-1 overflow-y-auto min-h-0 px-8 py-8 custom-scrollbar">
+                                <TabsContent value="branch" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
+                                    <Branch data={db.branchData} />
+                                </TabsContent>
+                                <TabsContent value="manager" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
+                                    <Manager manager={db.managers.find(m => m.isTopManager)} />
+                                </TabsContent>
+                                <TabsContent value="income" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
+                                    <Income data={db.incomeData} />
+                                </TabsContent>
+                                <TabsContent value="menu" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
+                                    <Menu data={db.menuData} />
+                                </TabsContent>
+                                <TabsContent value="charts" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
+                                    <Charts data={db.operationalData} />
+                                </TabsContent>
+                            </div>
+                        </Tabs>
+                        <div className="flex-1 lg:max-w-md h-full min-h-0 overflow-hidden bg-gray-100 backdrop-blur-md rounded-2xl shadow-sm p-8 border border-white/20">
+                            <ManagersnBranch managers={db.managers} />
                         </div>
-                        <div className="flex-1 overflow-y-auto min-h-0 px-6 py-6">
-                            <TabsContent value="branch" className="mt-0 outline-none animate-in fade-in slide-in-from-left-2 duration-300">
-                                <Branch data={db.branchData} />
-                            </TabsContent>
-                            <TabsContent value="manager" className="mt-0 outline-none animate-in fade-in slide-in-from-left-2 duration-300">
-                                <Manager manager={db.managers.find(m => m.isTopManager)} />
-                            </TabsContent>
-                            <TabsContent value="income" className="mt-0 outline-none animate-in fade-in slide-in-from-left-2 duration-300">
-                                <Income data={db.incomeData} />
-                            </TabsContent>
-                            <TabsContent value="menu" className="mt-0 outline-none animate-in fade-in slide-in-from-left-2 duration-300">
-                                <Menu data={db.menuData} />
-                            </TabsContent>
-                            <TabsContent value="charts" className="mt-0 outline-none animate-in fade-in slide-in-from-left-2 duration-300">
-                                <Charts data={db.operationalData} />
-                            </TabsContent>
-                        </div>
-                    </Tabs>
+                    </div>
                 </Card>
-                <div className="flex-1 min-w-[350px] h-full min-h-0 overflow-hidden">
-                    <ManagersnBranch managers={db.managers} />
-                </div>
+
             </main>
         </div>
     )
