@@ -1,5 +1,5 @@
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
-import Home from "./pages/home"
+import Home from "./pages/Home"
 import Branches from "./pages/Branches"
 import AIPrediction from "./pages/AIPrediction"
 

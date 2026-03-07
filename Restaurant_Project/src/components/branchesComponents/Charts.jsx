@@ -4,10 +4,10 @@ import { Separator } from "@/components/ui/separator"
 import { Users, Store, Zap, Clock } from "lucide-react"
 
 // --- Extracted Sub-components ---
-import { DashboardHeader } from "./DashboardHeader"
-import { TrafficTab } from "./TrafficTab"
-import { DepartmentTable } from "./DepartmentTable"
-import { ActivityLog } from "./ActivityLog"
+import { DashboardHeader } from "./chartsfolder/DashboardHeader"
+import { TrafficTab } from "./chartsfolder/TrafficTab"
+import { DepartmentTable } from "./chartsfolder/DepartmentTable"
+import { ActivityLog } from "./chartsfolder/ActivityLog"
 
 // --- Main Component ---
 
