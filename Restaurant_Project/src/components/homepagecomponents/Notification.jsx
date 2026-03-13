@@ -54,7 +54,7 @@ export function Notification() {
 
         <div className="flex-1">
             <h2>Notification</h2>
-            <ScrollArea className="h-[300px] w-full rounded-md border-2 p-4">
+            <ScrollArea className="h-70 w-full rounded-md border-2 p-4">
                 <div className="flex flex-col gap-4">
                     {notifications.map((notification, index) => (
                         <Alert

@@ -11,7 +11,7 @@ import { IncomeTargetProgress } from "../components/homepagecomponents/IncomeTar
 function Home() {
 
     return (
-        <div className="min-h-svh flex flex-col bg-muted/90">
+        <div className="min-h-svh flex flex-col bg-muted/90 scroll">
             <Navbar />
             <main className="flex-1 p-6 md:p-10 space-y-6">
 

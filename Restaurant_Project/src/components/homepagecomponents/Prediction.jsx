@@ -9,7 +9,7 @@ import {
 
 export function Prediction() {
     return (
-        <Card className="flex-1 flex flex-col bg-gray-300 border-1 border-black ">
+        <Card className="h-60 flex-1 flex flex-col bg-gray-300 border-1 border-black">
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-medium">
                     Prediction
