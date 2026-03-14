@@ -1,5 +1,5 @@
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
     Card,
     CardContent,
@@ -9,16 +9,6 @@ import {
 import { ChartContainer } from "@/components/ui/chart"
 import { Bar, BarChart, XAxis, Cell } from "recharts"
 
-const chartData = [
-    { branchName: "A", income: 7186, increase: "+10%" },
-    { branchName: "B", income: 3205, increase: "+5%" },
-    { branchName: "C", income: 5037, increase: "+12%" },
-    { branchName: "D", income: 2037, increase: "-2%" },
-    { branchName: "E", income: 9037, increase: "+20%" },
-    { branchName: "F", income: 6400, increase: "+15%" },
-    { branchName: "G", income: 4200, increase: "+8%" },
-
-]
 const chartConfig = {
     income: {
         label: "Income",
@@ -28,7 +18,41 @@ const chartConfig = {
 
 export function IncomeBranchTracker() {
 
-    const [activeBranch, setActiveBranch] = useState(chartData[0])
+    const [chartData, setChartData] = useState([])
+    const [activeBranch, setActiveBranch] = useState(null)
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await fetch('http://localhost:5000/api/stats/income-branch-tracker')
+                const data = await res.json()
+                setChartData(data)
+                if (data.length > 0) setActiveBranch(data[0])
+                setLoading(false)
+            } catch (error) {
+                console.error("Error fetching branches:", error)
+                setLoading(false)
+            }
+        }
+        fetchData()
+    }, [])
+
+    if (loading) {
+        return (
+            <Card className="flex-none lg:w-3xl h-72 flex items-center justify-center">
+                <p className="text-muted-foreground">Loading chart data...</p>
+            </Card>
+        )
+    }
+
+    if (!chartData || chartData.length === 0) {
+        return (
+            <Card className="flex-none lg:w-3xl h-72 flex items-center justify-center">
+                <p className="text-muted-foreground">No branches found.</p>
+            </Card>
+        )
+    }
 
     return (
         <Card className="flex-none lg:w-3xl">
