@@ -87,7 +87,7 @@ app.get('/api/branches-page-data', async (req, res) => {
         const { data: managers, error: managerError } = await supabase
             .from('users')
             .select('*')
-            .eq('role', 'branch_manager')
+            .eq('role', 'Branch_Manager')
         if (managerError) throw managerError;
 
         const mockIncomeData = {

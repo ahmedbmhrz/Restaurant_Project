@@ -14,8 +14,45 @@ import { Menu } from "../components/branchesComponents/Menu"
 import { Income } from "../components/branchesComponents/Income"
 import { Charts } from "../components/branchesComponents/Charts"
 import { db } from "../data/db"
+import { useState, useEffect } from "react"
 
 function Branches() {
+    const [pageData, setPageData] = useState(null);
+    useEffect(() => {
+        const fetchPageData = async () => {
+            try {
+                // Call our new backend endpoint!
+                const res = await fetch('http://localhost:5000/api/branches-page-data');
+                const data = await res.json();
+                
+                // Format the managers from Supabase to match our frontend component props
+                const formattedManagers = data.managers.map((m, i) => ({
+                    id: m.id,
+                    name: m.full_name,
+                    role: m.role.replace('_', ' '), // "Branch_Manager" -> "Branch Manager"
+                    avatarSrc: `https://api.dicebear.com/7.x/initials/svg?seed=${m.full_name}`,
+                    avatarFallback: m.full_name ? m.full_name.substring(0, 2).toUpperCase() : "MG",
+                    achievement: "Managing branch operations effectively",
+                    tenure: "1.0 Years",
+                    performance: 4.5,
+                    growth: 10,
+                    isTopManager: i === 0 // Make the first manager the "top manager" for the main display
+                }));
+
+                setPageData({
+                    ...data,
+                    managers: formattedManagers
+                });
+            } catch (error) {
+                console.error("Error loading branch page data:", error);
+            }
+        };
+        fetchPageData();
+    }, []);
+    if (!pageData) {
+        return <div className="h-screen flex items-center justify-center">Loading Branches Insights...</div>;
+    }
+
     return (
         <div className="h-screen flex flex-col bg-muted/90 overflow-hidden">
             <Navbar />
@@ -52,24 +89,24 @@ function Branches() {
                             </div>
                             <div className="flex-1 overflow-y-auto min-h-0 px-8 py-8 custom-scrollbar">
                                 <TabsContent value="branch" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
-                                    <Branch data={db.branchData} />
+                                    <Branch data={pageData.branchesFromDb[0]} />
                                 </TabsContent>
                                 <TabsContent value="manager" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
-                                    <Manager manager={db.managers.find(m => m.isTopManager)} />
+                                    <Manager manager={pageData.managers.find(m => m.isTopManager)} />
                                 </TabsContent>
                                 <TabsContent value="income" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
-                                    <Income data={db.incomeData} />
+                                    <Income data={pageData.incomeData} />
                                 </TabsContent>
                                 <TabsContent value="menu" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
-                                    <Menu data={db.menuData} />
+                                    <Menu data={pageData.menuData} />
                                 </TabsContent>
                                 <TabsContent value="charts" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
-                                    <Charts data={db.operationalData} />
+                                    <Charts data={pageData.operationalData} />
                                 </TabsContent>
                             </div>
                         </Tabs>
                         <div className="flex-1 lg:max-w-md h-full min-h-0 overflow-hidden bg-gray-100 backdrop-blur-md rounded-2xl shadow-sm p-8 border border-white/20">
-                            <ManagersnBranch managers={db.managers} />
+                            <ManagersnBranch managers={pageData.managers} />
                         </div>
                     </div>
                 </Card>
