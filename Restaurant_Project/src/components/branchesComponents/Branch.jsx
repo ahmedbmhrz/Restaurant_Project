@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Building2, TrendingUp, Users, MapPin, Info } from "lucide-react"
+import { BranchOperationsSheet } from "./BranchOperationsSheet"
 
 export function Branch({ data }) {
     if (!data) return null;
@@ -11,7 +12,7 @@ export function Branch({ data }) {
     return (
         <TooltipProvider>
             <div className="p-4">
-                <Card className="group relative overflow-hidden border-none bg-linear-to-br from-card to-muted/50 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+                <Card className="  group relative overflow-hidden border-none bg-linear-to-br from-card to-muted/50 shadow-xl transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
                     {/* Decorative background element */}
                     <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/5 blur-3xl transition-all duration-500 group-hover:bg-primary/10" />
 
@@ -83,14 +84,7 @@ export function Branch({ data }) {
                     </CardContent>
 
                     <CardFooter className="pt-2">
-                        <Button 
-                            className="w-full transition-all duration-300 hover:gap-3 group/btn" 
-                            variant="default"
-                            onClick={() => alert(`Redirecting to Management Portal for: ${data.name}...`)}
-                        >
-                            Manage Branch
-                            <Building2 className="ml-2 h-4 w-4 opacity-0 transition-all duration-300 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0" />
-                        </Button>
+                        <BranchOperationsSheet data={data} />
                     </CardFooter>
                 </Card>
             </div>
