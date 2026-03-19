@@ -9,7 +9,7 @@ import { ManagersnBranch } from "../components/branchesComponents/ManagersnBranc
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Branch } from "../components/branchesComponents/Branch"
-import { Manager } from "../components/branchesComponents/Manager"
+import { Manager } from "../components/branchesComponents/ManagerInfo"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Menu } from "../components/branchesComponents/Menu"
 import { Income } from "../components/branchesComponents/Income"
@@ -26,28 +26,18 @@ function Branches() {
         const fetchPageData = async () => {
             setIsFetching(true);
             try {
-                const url = selectedBranchId 
+                const url = selectedBranchId
                     ? `http://localhost:5000/api/branches-page-data?branchId=${selectedBranchId}`
                     : 'http://localhost:5000/api/branches-page-data';
 
-                const res = await fetch(url);
+                const res = await fetch(url, { cache: 'no-store' });
                 const data = await res.json();
 
-                const formattedManagers = data.managers.map((m, i) => {
-                    // Check if this manager's branch is the actively targeted one
-                    const isSelected = m.branch_id === data.targetBranchId;
+                const formattedManagers = data.managers.map((m) => {
                     return {
-                        id: m.id,
-                        branch_id: m.branch_id, // include branch_id for the click handler
-                        name: m.full_name,
-                        role: m.role.replace('_', ' '),
-                        avatarSrc: `https://api.dicebear.com/7.x/initials/svg?seed=${m.full_name}`,
-                        avatarFallback: m.full_name ? m.full_name.substring(0, 2).toUpperCase() : "MG",
-                        achievement: "Managing branch operations effectively",
-                        tenure: "1.0 Years",
-                        performance: 4.5,
-                        growth: 10,
-                        isTopManager: isSelected // Update to use the backend's target
+                        ...m,
+                        role: m.role ? m.role.replace('_', ' ') : 'Managing Director',
+                        isTopManager: m.branch_id === data.targetBranchId
                     };
                 });
 
@@ -138,8 +128,8 @@ function Branches() {
                             </div>
                         </Tabs>
                         <div className="flex-1 lg:max-w-md h-full min-h-0 overflow-hidden bg-gray-100 backdrop-blur-md rounded-2xl shadow-sm p-8 border border-white/20">
-                            <ManagersnBranch 
-                                managers={pageData.managers} 
+                            <ManagersnBranch
+                                managers={pageData.managers}
                                 selectedBranchId={pageData.targetBranchId}
                                 onSelectManager={setSelectedBranchId}
                             />

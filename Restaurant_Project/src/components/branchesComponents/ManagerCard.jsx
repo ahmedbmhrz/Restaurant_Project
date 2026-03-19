@@ -17,7 +17,7 @@ export function ManagerCard({ name, role, avatarSrc, avatarFallback, achievement
             )}
             <div className="flex items-center gap-4">
                 <Avatar className="h-10 w-10">
-                    <AvatarImage src={avatarSrc} />
+                    {avatarSrc && <AvatarImage src={avatarSrc} className="object-cover" />}
                     <AvatarFallback>{avatarFallback}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">

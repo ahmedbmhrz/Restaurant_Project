@@ -9,6 +9,17 @@ import { UserCheck, Star, Clock, ShieldCheck, ArrowUpRight, Info } from "lucide-
 export function Manager({ manager }) {
     if (!manager) return null;
 
+    const growthVal = parseFloat(manager.growth) || 0;
+    const isPositive = growthVal >= 0;
+    // Map max 25% growth visually to a 100% full progress bar
+    const progressWidth = Math.min(100, Math.max(5, Math.abs(growthVal) * 4)); 
+    // Shift progress bar color to sophisticated Blue/Indigo to differentiate from Status
+    const growthColorText = isPositive ? "text-indigo-600" : "text-orange-600";
+    const growthSign = isPositive ? "+" : "";
+
+    const isOffline = manager.status === 'Offline';
+    const statusColorText = isOffline ? "text-rose-600" : "text-emerald-600";
+
     return (
         <TooltipProvider>
             <div className="p-4">
@@ -21,7 +32,7 @@ export function Manager({ manager }) {
                             <div className="flex items-center gap-3">
                                 <div className="relative">
                                     <Avatar className="h-14 w-14 ring-2 ring-primary/20 transition-all duration-500 group-hover:ring-primary/40">
-                                        <AvatarImage src={manager.avatarSrc} />
+                                        {manager.avatarSrc && <AvatarImage src={manager.avatarSrc} />}
                                         <AvatarFallback className="bg-primary/5 text-primary text-lg">{manager.avatarFallback}</AvatarFallback>
                                     </Avatar>
                                     <div className="absolute -bottom-1 -right-1 rounded-full bg-emerald-500 p-1 text-white shadow-sm ring-2 ring-background">
@@ -56,28 +67,33 @@ export function Manager({ manager }) {
                                             <UserCheck className="h-3.5 w-3.5" />
                                             Status
                                         </div>
-                                        <div className="text-lg font-bold text-emerald-600">On Duty</div>
+                                        <div className={`text-lg font-bold ${statusColorText}`}>{manager.status || 'On Duty'}</div>
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent className="text-[10px] font-medium">
-                                    Last clock-in: 08:45 AM Today
+                                    Last clock-in: {manager.lastActive || 'Recently'}
                                 </TooltipContent>
                             </Tooltip>
                         </div>
 
                         <div className="rounded-xl border border-dashed border-primary/20 bg-primary/5 p-3">
-                            <div className="flex items-center justify-between mb-1.5">
+                            <div className="flex items-center justify-between mb-2">
                                 <span className="text-[11px] font-bold text-primary uppercase tracking-widest">Growth Metric</span>
-                                <span className="text-xs font-bold text-emerald-600">+{manager.growth}%</span>
+                                <span className={`text-xs font-bold ${growthColorText}`}>{growthSign}{manager.growth}%</span>
                             </div>
                             <Tooltip>
                                 <TooltipTrigger asChild>
-                                    <div className="cursor-help py-1">
-                                        <Progress value={manager.growth * 10} className="h-1.5 bg-primary/10" indicatorClassName="bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
+                                    <div className="cursor-help py-1.5">
+                                        <div className="h-2 w-full bg-background/50 rounded-full overflow-hidden flex items-center shadow-inner">
+                                            <div 
+                                                className={`h-full rounded-full transition-all duration-1000 ease-out ${isPositive ? 'bg-linear-to-r from-blue-400 to-indigo-600 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'bg-linear-to-r from-orange-400 to-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]'}`}
+                                                style={{ width: `${progressWidth}%` }}
+                                            />
+                                        </div>
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent className="text-[10px] font-medium">
-                                    Monthly progress towards performance milestones.
+                                    {isPositive ? "Positive trending performance for this period." : "Negative trend requiring attention."}
                                 </TooltipContent>
                             </Tooltip>
                         </div>
