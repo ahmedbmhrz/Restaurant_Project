@@ -258,16 +258,16 @@ app.get('/api/branches-page-data', async (req, res) => {
                 .from('employee_shifts')
                 .select('*')
                 .eq('user_id', m.id)
-                .order('shift_date', { ascending: false })
                 .order('clock_in', { ascending: false })
-                .limit(1);
+                .limit(4);
             
             const lastShift = shiftData?.[0];
             let lastActiveStr = 'Never';
             let statusStr = 'Offline';
 
             if (lastShift) {
-                lastActiveStr = `${lastShift.shift_date} ${lastShift.clock_in}`;
+                // Derive last-active string from clock_in timestamp
+                lastActiveStr = lastShift.clock_in ? new Date(lastShift.clock_in).toLocaleString() : 'Unknown';
                 statusStr = lastShift.clock_out ? 'Offline' : 'On Duty';
             }
 
@@ -312,6 +312,9 @@ app.get('/api/branches-page-data', async (req, res) => {
                 performance: calcPerformance,
                 tenure: tenureStr,
                 growth: calcGrowth.toFixed(1),
+                currentRevenue: currentTotal,
+                prevRevenue: prevTotal,
+                recentShifts: shiftData || [],
                 lastActive: lastActiveStr,
                 status: statusStr
             }

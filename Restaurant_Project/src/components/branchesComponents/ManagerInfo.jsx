@@ -4,7 +4,8 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { UserCheck, Star, Clock, ShieldCheck, ArrowUpRight, Info } from "lucide-react"
+import { UserCheck, Star, Clock, ShieldCheck, Info } from "lucide-react"
+import { ManagerReportModal } from "./ManagerReportModal"
 
 export function Manager({ manager }) {
     if (!manager) return null;
@@ -100,10 +101,7 @@ export function Manager({ manager }) {
                     </CardContent>
 
                     <CardFooter className="pt-2">
-                        <Button className="w-full transition-all duration-300 hover:bg-primary group/btn shadow-md hover:text-white" variant="secondary">
-                            View Detailed Report
-                            <ArrowUpRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1" />
-                        </Button>
+                        <ManagerReportModal manager={manager} growthSign={growthSign} />
                     </CardFooter>
                 </Card>
             </div>
