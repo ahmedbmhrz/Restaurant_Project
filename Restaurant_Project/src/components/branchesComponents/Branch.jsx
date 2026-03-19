@@ -83,7 +83,11 @@ export function Branch({ data }) {
                     </CardContent>
 
                     <CardFooter className="pt-2">
-                        <Button className="w-full transition-all duration-300 hover:gap-3 group/btn" variant="default">
+                        <Button 
+                            className="w-full transition-all duration-300 hover:gap-3 group/btn" 
+                            variant="default"
+                            onClick={() => alert(`Redirecting to Management Portal for: ${data.name}...`)}
+                        >
                             Manage Branch
                             <Building2 className="ml-2 h-4 w-4 opacity-0 transition-all duration-300 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0" />
                         </Button>

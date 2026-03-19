@@ -112,7 +112,7 @@ function Branches() {
                                     </TabsTrigger>
                                 </TabsList>
                             </div>
-                            <div className="flex-1 overflow-y-auto min-h-0 px-8 py-8 custom-scrollbar relative">
+                            <div className="flex-1 overflow-y-hidden min-h-0 px-8 py-8 relative">
                                 {isFetching && (
                                     <div className="absolute inset-x-8 top-8 bottom-8 z-10 bg-gray-100/40 backdrop-blur-sm animate-in fade-in duration-300 pointer-events-none pb-8">
                                         <Skeleton className="h-full w-full rounded-3xl" />
