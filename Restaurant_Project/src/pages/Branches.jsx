@@ -21,22 +21,20 @@ function Branches() {
     useEffect(() => {
         const fetchPageData = async () => {
             try {
-                // Call our new backend endpoint!
                 const res = await fetch('http://localhost:5000/api/branches-page-data');
                 const data = await res.json();
-                
-                // Format the managers from Supabase to match our frontend component props
+
                 const formattedManagers = data.managers.map((m, i) => ({
                     id: m.id,
                     name: m.full_name,
-                    role: m.role.replace('_', ' '), // "Branch_Manager" -> "Branch Manager"
+                    role: m.role.replace('_', ' '),
                     avatarSrc: `https://api.dicebear.com/7.x/initials/svg?seed=${m.full_name}`,
                     avatarFallback: m.full_name ? m.full_name.substring(0, 2).toUpperCase() : "MG",
                     achievement: "Managing branch operations effectively",
                     tenure: "1.0 Years",
                     performance: 4.5,
                     growth: 10,
-                    isTopManager: i === 0 // Make the first manager the "top manager" for the main display
+                    isTopManager: i === 0
                 }));
 
                 setPageData({
