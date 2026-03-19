@@ -114,20 +114,8 @@ function Branches() {
                             </div>
                             <div className="flex-1 overflow-y-auto min-h-0 px-8 py-8 custom-scrollbar relative">
                                 {isFetching && (
-                                    <div className="absolute inset-x-8 top-8 bottom-8 z-10 bg-gray-100/40 backdrop-blur-sm flex flex-col space-y-8 animate-in fade-in duration-300 pointer-events-none pb-8">
-                                        <div className="flex items-center gap-6">
-                                            <Skeleton className="h-20 w-20 rounded-2xl" />
-                                            <div className="space-y-3">
-                                                <Skeleton className="h-8 w-[250px]" />
-                                                <Skeleton className="h-4 w-[150px]" />
-                                            </div>
-                                        </div>
-                                        <Skeleton className="h-[250px] w-full rounded-3xl" />
-                                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 pb-8">
-                                            <Skeleton className="h-[180px] w-full rounded-3xl" />
-                                            <Skeleton className="h-[180px] w-full rounded-3xl" />
-                                            <Skeleton className="h-[180px] w-full rounded-3xl" />
-                                        </div>
+                                    <div className="absolute inset-x-8 top-8 bottom-8 z-10 bg-gray-100/40 backdrop-blur-sm animate-in fade-in duration-300 pointer-events-none pb-8">
+                                        <Skeleton className="h-full w-full rounded-3xl" />
                                     </div>
                                 )}
                                 <div className={`transition-opacity duration-500 ${isFetching ? 'opacity-30' : 'opacity-100'}`}>
