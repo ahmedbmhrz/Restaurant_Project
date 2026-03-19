@@ -79,22 +79,42 @@ app.get('/api/stats/branch-managers', async (req, res) => {
 
 app.get('/api/branches-page-data', async (req, res) => {
     try {
-        const { data: branches, error: branchError } = await supabase.from('branches').select('*');
-        if (branchError) throw branchError;
+        const { branchId } = req.query;
 
+        // Managers: Always fetch all managers for the sidebar
         const { data: managers, error: managerError } = await supabase.from('users').select('*').eq('role', 'Branch_Manager');
         if (managerError) throw managerError;
-        
-        // Fetch new real data
-        const { data: orders } = await supabase.from('orders').select('*');
+
+        // Determine target branch
+        const targetBranchId = branchId || (managers && managers.length > 0 ? managers[0].branch_id : null);
+
+        // Branch Details: return only the targeted branch
+        let branchesQuery = supabase.from('branches').select('*');
+        if (targetBranchId) branchesQuery = branchesQuery.eq('id', targetBranchId);
+        const { data: branches, error: branchError } = await branchesQuery;
+        if (branchError) throw branchError;
+
+        // Orders: filter by targeted branch
+        let ordersQuery = supabase.from('orders').select('*');
+        if (targetBranchId) ordersQuery = ordersQuery.eq('branch_id', targetBranchId);
+        const { data: orders } = await ordersQuery;
+
+        // Products & Items
         const { data: products } = await supabase.from('products').select('*');
         const { data: orderItems } = await supabase.from('order_items').select('*');
-        const { data: shifts } = await supabase.from('employee_shifts').select('*').order('created_at', { ascending: false }).limit(5);
+
+        // Shifts: filter by branch
+        let shiftsQuery = supabase.from('employee_shifts').select('*').order('created_at', { ascending: false }).limit(5);
+        if (targetBranchId) shiftsQuery = shiftsQuery.eq('branch_id', targetBranchId);
+        const { data: shifts } = await shiftsQuery;
 
         const safeOrders = orders || [];
         const safeProducts = products || [];
-        const safeOrderItems = orderItems || [];
         const safeShifts = shifts || [];
+        
+        // Filter order items to only this branch's orders
+        const orderIds = new Set(safeOrders.map(o => o.id));
+        const safeOrderItems = (orderItems || []).filter(item => orderIds.has(item.order_id));
 
         // 1. INCOME DATA
         const totalIncome = safeOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
@@ -211,6 +231,7 @@ app.get('/api/branches-page-data', async (req, res) => {
         res.json({
             branchesFromDb: branches,
             managers: managers,
+            targetBranchId, // Return this so the frontend knows what is actively targeted
             incomeData,
             menuData,
             operationalData

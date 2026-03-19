@@ -2,9 +2,19 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-export function ManagerCard({ name, role, avatarSrc, avatarFallback, achievement }) {
+export function ManagerCard({ name, role, avatarSrc, avatarFallback, achievement, onClick, isSelected }) {
     return (
-        <Card className="p-4 bg-white border-none">
+        <Card 
+            className={`p-4 cursor-pointer transition-all duration-300 relative overflow-hidden ${
+                isSelected 
+                    ? 'scale-95 bg-slate-100/60 shadow-inner border border-primary/20' 
+                    : 'bg-white hover:scale-[0.98] hover:shadow-md border border-transparent'
+            }`}
+            onClick={onClick}
+        >
+            {isSelected && (
+                <div className="absolute top-1/2 -right-1 w-2 h-8 -translate-y-1/2 bg-primary rounded-l-full shadow-sm" />
+            )}
             <div className="flex items-center gap-4">
                 <Avatar className="h-10 w-10">
                     <AvatarImage src={avatarSrc} />

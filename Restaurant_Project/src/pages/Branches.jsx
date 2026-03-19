@@ -6,7 +6,8 @@ import { BranchManager } from "../components/homepagecomponents/BranchManager"
 import { Prediction } from "../components/homepagecomponents/Prediction"
 import { IncomeTargetProgress } from "../components/homepagecomponents/IncomeTargetProgress"
 import { ManagersnBranch } from "../components/branchesComponents/ManagersnBranch"
-import { Card, } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { Branch } from "../components/branchesComponents/Branch"
 import { Manager } from "../components/branchesComponents/Manager"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
@@ -18,24 +19,37 @@ import { useState, useEffect } from "react"
 
 function Branches() {
     const [pageData, setPageData] = useState(null);
+    const [selectedBranchId, setSelectedBranchId] = useState(null);
+    const [isFetching, setIsFetching] = useState(false);
+
     useEffect(() => {
         const fetchPageData = async () => {
+            setIsFetching(true);
             try {
-                const res = await fetch('http://localhost:5000/api/branches-page-data');
+                const url = selectedBranchId 
+                    ? `http://localhost:5000/api/branches-page-data?branchId=${selectedBranchId}`
+                    : 'http://localhost:5000/api/branches-page-data';
+
+                const res = await fetch(url);
                 const data = await res.json();
 
-                const formattedManagers = data.managers.map((m, i) => ({
-                    id: m.id,
-                    name: m.full_name,
-                    role: m.role.replace('_', ' '),
-                    avatarSrc: `https://api.dicebear.com/7.x/initials/svg?seed=${m.full_name}`,
-                    avatarFallback: m.full_name ? m.full_name.substring(0, 2).toUpperCase() : "MG",
-                    achievement: "Managing branch operations effectively",
-                    tenure: "1.0 Years",
-                    performance: 4.5,
-                    growth: 10,
-                    isTopManager: i === 0
-                }));
+                const formattedManagers = data.managers.map((m, i) => {
+                    // Check if this manager's branch is the actively targeted one
+                    const isSelected = m.branch_id === data.targetBranchId;
+                    return {
+                        id: m.id,
+                        branch_id: m.branch_id, // include branch_id for the click handler
+                        name: m.full_name,
+                        role: m.role.replace('_', ' '),
+                        avatarSrc: `https://api.dicebear.com/7.x/initials/svg?seed=${m.full_name}`,
+                        avatarFallback: m.full_name ? m.full_name.substring(0, 2).toUpperCase() : "MG",
+                        achievement: "Managing branch operations effectively",
+                        tenure: "1.0 Years",
+                        performance: 4.5,
+                        growth: 10,
+                        isTopManager: isSelected // Update to use the backend's target
+                    };
+                });
 
                 setPageData({
                     ...data,
@@ -43,12 +57,25 @@ function Branches() {
                 });
             } catch (error) {
                 console.error("Error loading branch page data:", error);
+            } finally {
+                setIsFetching(false);
             }
         };
         fetchPageData();
-    }, []);
+    }, [selectedBranchId]); // Add selectedBranchId as dependency!
+
     if (!pageData) {
-        return <div className="h-screen flex items-center justify-center">Loading Branches Insights...</div>;
+        return (
+            <div className="h-screen flex flex-col bg-muted/90 overflow-hidden">
+                <Navbar />
+                <main className="flex-1 p-6 md:p-10 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-6 animate-pulse">
+                        <div className="h-16 w-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+                        <p className="text-primary font-bold tracking-widest uppercase">Initializing Dashboard...</p>
+                    </div>
+                </main>
+            </div>
+        );
     }
 
     return (
@@ -85,26 +112,49 @@ function Branches() {
                                     </TabsTrigger>
                                 </TabsList>
                             </div>
-                            <div className="flex-1 overflow-y-auto min-h-0 px-8 py-8 custom-scrollbar">
-                                <TabsContent value="branch" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
-                                    <Branch data={pageData.branchesFromDb[0]} />
-                                </TabsContent>
-                                <TabsContent value="manager" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
-                                    <Manager manager={pageData.managers.find(m => m.isTopManager)} />
-                                </TabsContent>
-                                <TabsContent value="income" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
-                                    <Income data={pageData.incomeData} />
-                                </TabsContent>
-                                <TabsContent value="menu" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
-                                    <Menu data={pageData.menuData} />
-                                </TabsContent>
-                                <TabsContent value="charts" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
-                                    <Charts data={pageData.operationalData} />
-                                </TabsContent>
+                            <div className="flex-1 overflow-y-auto min-h-0 px-8 py-8 custom-scrollbar relative">
+                                {isFetching && (
+                                    <div className="absolute inset-x-8 top-8 bottom-8 z-10 bg-gray-100/40 backdrop-blur-sm flex flex-col space-y-8 animate-in fade-in duration-300 pointer-events-none pb-8">
+                                        <div className="flex items-center gap-6">
+                                            <Skeleton className="h-20 w-20 rounded-2xl" />
+                                            <div className="space-y-3">
+                                                <Skeleton className="h-8 w-[250px]" />
+                                                <Skeleton className="h-4 w-[150px]" />
+                                            </div>
+                                        </div>
+                                        <Skeleton className="h-[250px] w-full rounded-3xl" />
+                                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 pb-8">
+                                            <Skeleton className="h-[180px] w-full rounded-3xl" />
+                                            <Skeleton className="h-[180px] w-full rounded-3xl" />
+                                            <Skeleton className="h-[180px] w-full rounded-3xl" />
+                                        </div>
+                                    </div>
+                                )}
+                                <div className={`transition-opacity duration-500 ${isFetching ? 'opacity-30' : 'opacity-100'}`}>
+                                    <TabsContent value="branch" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
+                                        <Branch data={pageData.branchesFromDb[0]} />
+                                    </TabsContent>
+                                    <TabsContent value="manager" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
+                                        <Manager manager={pageData.managers.find(m => m.isTopManager)} />
+                                    </TabsContent>
+                                    <TabsContent value="income" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
+                                        <Income data={pageData.incomeData} />
+                                    </TabsContent>
+                                    <TabsContent value="menu" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
+                                        <Menu data={pageData.menuData} />
+                                    </TabsContent>
+                                    <TabsContent value="charts" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
+                                        <Charts data={pageData.operationalData} />
+                                    </TabsContent>
+                                </div>
                             </div>
                         </Tabs>
                         <div className="flex-1 lg:max-w-md h-full min-h-0 overflow-hidden bg-gray-100 backdrop-blur-md rounded-2xl shadow-sm p-8 border border-white/20">
-                            <ManagersnBranch managers={pageData.managers} />
+                            <ManagersnBranch 
+                                managers={pageData.managers} 
+                                selectedBranchId={pageData.targetBranchId}
+                                onSelectManager={setSelectedBranchId}
+                            />
                         </div>
                     </div>
                 </Card>
