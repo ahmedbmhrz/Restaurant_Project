@@ -75,7 +75,11 @@ export function BranchOperationsSheet({ data, staffList = [], allUsers = [] }) {
                     <Separator className="bg-border/40" />
 
                     {/* Section 3: Staff Management */}
-                    <StaffingSection staffList={staffList} onTransfer={handleTransferStaff} />
+                    <StaffingSection 
+                        staffList={staffList} 
+                        onTransfer={handleTransferStaff} 
+                        branchId={data.id}
+                    />
 
                     {/* Section 4: Emergency Controls */}
                     <EmergencyControls />

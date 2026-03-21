@@ -95,14 +95,14 @@ app.get('/api/stats/branch-managers', async (req, res) => {
 
 app.get('/api/branches-page-data', async (req, res) => {
     try {
-        const { branchId } = req.query;
+        const branchId = req.query.branchId || req.query.branch;
 
         // Managers: Always fetch all managers for the sidebar
         const { data: managers, error: managerError } = await supabase.from('users').select('*').eq('role', 'Branch_Manager');
         if (managerError) throw managerError;
 
         // Determine target branch
-        const targetBranchId = branchId || (managers && managers.length > 0 ? managers[0].branch_id : null);
+        const targetBranchId = branchId || (managers && managers.length > 0 ? managers[0].branch_id : "11111111-1111-1111-1111-111111111111");
 
         // Branch Details: return only the targeted branch
         let branchesQuery = supabase.from('branches').select('*');
@@ -312,7 +312,7 @@ app.get('/api/branches-page-data', async (req, res) => {
         // Fetch all staff for this branch
         const { data: branchStaff } = await supabase
             .from('users')
-            .select('id, full_name, role, avatar_url, status')
+            .select('id, full_name, role, avatar_url')
             .eq('branch_id', targetBranchId);
 
         // Fetch all potential managers (all users for simplicity in this demo, or filter by role)
@@ -493,6 +493,37 @@ app.patch('/api/branch-stock', async (req, res) => {
         if (error) throw error;
         res.json(data[0]);
     } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- STAFF & USER MANAGEMENT ---
+
+// Create New User/Staff
+app.post('/api/users', async (req, res) => {
+    const { full_name, role, branch_id } = req.body;
+    console.log("📝 Hiring Request:", { full_name, role, branch_id });
+    
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .insert({ 
+                full_name, 
+                role, 
+                branch_id, 
+                hire_date: new Date().toISOString().split('T')[0]
+            })
+            .select();
+
+        if (error) {
+            console.error("❌ Hiring Database Error:", error);
+            throw error;
+        }
+
+        console.log("✅ Hired Successfully:", data[0]);
+        res.json(data[0]);
+    } catch (err) {
+        console.error("❌ Hiring Server Error:", err);
         res.status(500).json({ error: err.message });
     }
 });
