@@ -110,7 +110,11 @@ function Branches() {
                                 )}
                                 <div className={`transition-opacity duration-500 ${isFetching ? 'opacity-30' : 'opacity-100'}`}>
                                     <TabsContent value="branch" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
-                                        <Branch data={pageData.branchesFromDb[0]} />
+                                        <Branch 
+                                            data={pageData.branchesFromDb[0]} 
+                                            staffList={pageData.operationalData.fullStaffList}
+                                            allUsers={pageData.operationalData.allUsers}
+                                        />
                                     </TabsContent>
                                     <TabsContent value="manager" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
                                         <Manager manager={pageData.managers.find(m => m.isTopManager)} />
@@ -119,7 +123,10 @@ function Branches() {
                                         <Income data={pageData.incomeData} />
                                     </TabsContent>
                                     <TabsContent value="menu" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
-                                        <Menu data={pageData.menuData} />
+                                        <Menu 
+                                            data={pageData.menuData} 
+                                            branchId={pageData.targetBranchId} 
+                                        />
                                     </TabsContent>
                                     <TabsContent value="charts" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
                                         <Charts data={pageData.operationalData} />

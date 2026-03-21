@@ -30,6 +30,10 @@ export function SignatureJewels({ items }) {
                                     <Badge variant="outline" className="h-4 text-[8px] font-black uppercase tracking-tighter border-none bg-amber-500/5 text-amber-600">
                                         {item.status}
                                     </Badge>
+                                    <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+                                    <span className={`text-[10px] font-bold ${item.stock_quantity <= 5 ? 'text-rose-500' : 'text-muted-foreground'}`}>
+                                        {item.stock_quantity} In Stock
+                                    </span>
                                 </div>
                             </div>
                         </div>

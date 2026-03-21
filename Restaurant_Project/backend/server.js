@@ -165,16 +165,43 @@ app.get('/api/branches-page-data', async (req, res) => {
             ]
         };
 
-        // 2. MENU DATA
-        const activeCount = safeProducts.filter(p => p.is_active).length;
-        const outOfStockCount = safeProducts.filter(p => !p.is_active || p.stock_quantity <= 0).length;
+        // 2. MENU DATA (Localized for this branch)
+        const { data: allProducts } = await supabase.from('products').select('*');
+        const { data: branchStocks } = await supabase
+            .from('branch_stock')
+            .select('product_id, stock_quantity')
+            .eq('branch_id', targetBranchId);
+
+        const stockMap = {};
+        (branchStocks || []).forEach(bs => (stockMap[bs.product_id] = bs.stock_quantity));
+
+        const localizedProducts = (allProducts || []).map(p => ({
+            ...p,
+            stock_quantity: stockMap[p.id] !== undefined ? stockMap[p.id] : 0 // Default to 0 if record missing
+        }));
+
+        const activeProducts = localizedProducts.filter(p => p.is_active);
+        const activeCount = activeProducts.length;
+        
+        // Smart Health Calculation
+        // - Stock > 10: 100% Health
+        // - Stock 1-10: 50% Health (Warning)
+        // - Stock 0: 0% Health (Critical)
+        const totalHealthScore = activeProducts.reduce((sum, p) => {
+            if (p.stock_quantity > 10) return sum + 1;
+            if (p.stock_quantity > 0) return sum + 0.5;
+            return sum;
+        }, 0);
+
+        const healthPercentage = activeCount > 0 ? Math.round((totalHealthScore / activeCount) * 100) : 0;
+        const outOfStockCount = activeProducts.filter(p => p.stock_quantity <= 0).length;
 
         const productSales = {};
         safeOrderItems.forEach(item => {
             productSales[item.product_id] = (productSales[item.product_id] || 0) + (item.quantity || 1);
         });
 
-        const sortedProducts = [...safeProducts]
+        const sortedProducts = [...localizedProducts]
             .sort((a, b) => (productSales[b.id] || 0) - (productSales[a.id] || 0));
 
         const topDish = sortedProducts[0] || {};
@@ -183,24 +210,26 @@ app.get('/api/branches-page-data', async (req, res) => {
             orders: productSales[p.id] || 0,
             price: `$${(p.price || 0).toFixed(2)}`,
             status: productSales[p.id] > 5 ? "Best Seller" : "Trending",
-            image_url: p.image_url
+            image_url: p.image_url,
+            stock_quantity: p.stock_quantity
         }));
 
         const menuData = {
             stats: {
                 active: activeCount,
                 outOfStock: outOfStockCount,
-                categories: [...new Set(safeProducts.map(p => p.category_id))].filter(Boolean).length || 0,
-                health: activeCount > 0 ? `${Math.round(((activeCount - outOfStockCount) / activeCount) * 100)}%` : "0%"
+                categories: [...new Set(localizedProducts.map(p => p.category_id || p.category))].filter(Boolean).length || 0,
+                health: `${healthPercentage}%`
             },
             highlightDish: {
                 name: topDish.name || "Menu Item",
                 price: topDish.price ? `$${(topDish.price).toFixed(2)}` : "$0.00",
                 rating: topDish.rating || 4.9,
                 orders: productSales[topDish.id] || 0,
-                image: topDish.image_url || "🍔" // Uses URL if exists, else emoji
+                image: topDish.image_url || "🍔"
             },
-            topItems: topItemsList.length ? topItemsList : [{ name: "No items found", orders: 0, price: "$0", status: "N/A" }]
+            topItems: topItemsList,
+            fullProductList: localizedProducts // For management
         };
 
         // 3. OPERATIONAL DATA
@@ -279,11 +308,25 @@ app.get('/api/branches-page-data', async (req, res) => {
             .select('*', { count: 'exact', head: true })
             .is('clock_out', null);
 
+        // 4. MANAGEMENT DATA
+        // Fetch all staff for this branch
+        const { data: branchStaff } = await supabase
+            .from('users')
+            .select('id, full_name, role, avatar_url, status')
+            .eq('branch_id', targetBranchId);
+
+        // Fetch all potential managers (all users for simplicity in this demo, or filter by role)
+        const { data: allUsers } = await supabase
+            .from('users')
+            .select('id, full_name, role');
+
         const operationalData = {
             traffic: traffic,
             departments: departments.length ? departments : [{ name: "General", share: 100, growth: "0%", status: "Optimal" }],
             activity: activity.length ? activity : [{ id: 1, type: "System", title: "No recent activity", time: "Now", status: "Idle" }],
-            activeStaff: activeStaffCount || 0
+            activeStaff: activeStaffCount || 0,
+            fullStaffList: branchStaff || [],
+            allUsers: allUsers || []
         };
 
         const { count: staffCount } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('branch_id', targetBranchId);
@@ -389,6 +432,103 @@ app.get('/api/branches-page-data', async (req, res) => {
 
     } catch (err) {
         console.error(err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- MENU & PRODUCT MANAGEMENT ---
+
+// Create New Product
+app.post('/api/products', async (req, res) => {
+    const { name, category, price, stock_quantity, branch_id, image_url } = req.body;
+    try {
+        // 1. Create product globally
+        const { data: product, error: pError } = await supabase
+            .from('products')
+            .insert({ name, category, price, image_url, is_active: true })
+            .select();
+        
+        if (pError) throw pError;
+        const newProd = product[0];
+
+        // 2. Initialize stock for the starting branch
+        if (branch_id) {
+            const { error: sError } = await supabase
+                .from('branch_stock')
+                .insert({ branch_id, product_id: newProd.id, stock_quantity });
+            if (sError) throw sError;
+        }
+
+        res.json(newProd);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update Product Info (Global)
+app.patch('/api/products/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, price, image_url, is_active } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('products')
+            .update({ name, price, image_url, is_active })
+            .eq('id', id)
+            .select();
+        if (error) throw error;
+        res.json(data[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update Branch Stock Quantity
+app.patch('/api/branch-stock', async (req, res) => {
+    const { branch_id, product_id, stock_quantity } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('branch_stock')
+            .upsert({ branch_id, product_id, stock_quantity })
+            .select();
+        if (error) throw error;
+        res.json(data[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// --- ADMINISTRATIVE ENDPOINTS ---
+
+// Update Branch Profile
+app.patch('/api/branches/:id', async (req, res) => {
+    const { id } = req.params;
+    const { name, address, description } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('branches')
+            .update({ name, address, description })
+            .eq('id', id)
+            .select();
+        if (error) throw error;
+        res.json(data[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Update User Branch (Transfer Staff/Manager)
+app.patch('/api/users/:id/branch', async (req, res) => {
+    const { id } = req.params;
+    const { branch_id, role } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .update({ branch_id, role })
+            .eq('id', id)
+            .select();
+        if (error) throw error;
+        res.json(data[0]);
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
