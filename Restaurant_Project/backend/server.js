@@ -196,12 +196,23 @@ app.get('/api/branches-page-data', async (req, res) => {
         };
 
         // 3. OPERATIONAL DATA
+        // 3. OPERATIONAL DATA
         const trafficMap = {};
+        // Initialize all 24 hours with 0
+        for (let i = 0; i < 24; i++) {
+            const hour = i;
+            const formatted = hour >= 12 ? (hour === 12 ? `12 PM` : `${hour - 12} PM`) : (hour === 0 ? `12 AM` : `${hour} AM`);
+            trafficMap[formatted] = 0;
+        }
+
         safeOrders.forEach(o => {
-            const hour = new Date(o.created_at).getHours();
-            const formatted = hour > 12 ? `${hour - 12} PM` : (hour === 0 ? `12 AM` : (hour === 12 ? `12 PM` : `${hour} AM`));
+            const date = new Date(o.created_at);
+            const hour = date.getHours();
+            const formatted = hour >= 12 ? (hour === 12 ? `12 PM` : `${hour - 12} PM`) : (hour === 0 ? `12 AM` : `${hour} AM`);
             trafficMap[formatted] = (trafficMap[formatted] || 0) + 1;
         });
+
+        // Convert map to sorted 24h array starting from 12 AM
         const traffic = Object.keys(trafficMap).map(time => ({ time, count: trafficMap[time] }));
 
         const deptMap = {};
@@ -214,34 +225,57 @@ app.get('/api/branches-page-data', async (req, res) => {
             name: type,
             share: Math.round((deptMap[type] / totalDept) * 100),
             growth: "+0%",
-            status: "Optimal"
+            status: deptMap[type] > (totalDept / 2) ? "Peak" : "Optimal"
         }));
+
+        const now = new Date();
+        const getRelativeTime = (dateStr) => {
+            const diffMs = now - new Date(dateStr);
+            const diffMins = Math.floor(diffMs / 60000);
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            const hours = Math.floor(diffMins / 60);
+            if (hours < 24) return `${hours}h ago`;
+            return new Date(dateStr).toLocaleDateString();
+        };
 
         const recentOrders = [...safeOrders]
             .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .slice(0, 3)
+            .slice(0, 5)
             .map(o => ({
-                id: o.id,
+                id: `order-${o.id}`,
                 type: "Order",
-                title: `New Order $${o.total_amount}`,
-                time: "Recently",
-                status: o.status || "Pending"
+                title: `Order $${(o.total_amount || 0).toFixed(2)}`,
+                time: getRelativeTime(o.created_at),
+                status: o.status === 'Completed' ? 'Success' : 'Pending'
             }));
 
         const recentShifts = safeShifts.map(s => ({
-            id: s.id,
+            id: `shift-${s.id}`,
             type: "Staff",
-            title: `Staff clock-in`,
-            time: "Recently",
-            status: "System"
+            title: `Staff ${s.status === 'Active' ? 'Clock-in' : 'Clock-out'}`,
+            time: getRelativeTime(s.clock_in),
+            status: s.status === 'Active' ? 'Active' : 'Neutral'
         }));
 
-        const activity = [...recentOrders, ...recentShifts].slice(0, 5);
+        const activity = [...recentOrders, ...recentShifts]
+            .sort((a, b) => {
+                // Approximate sorting as we don't have full staff timestamp in this specific map yet
+                return a.id.startsWith('order') ? -1 : 1; 
+            })
+            .slice(0, 5);
+
+        // Active Staff Count (clock_out is NULL)
+        const { count: activeStaffCount } = await supabase
+            .from('employee_shifts')
+            .select('*', { count: 'exact', head: true })
+            .is('clock_out', null);
 
         const operationalData = {
-            traffic: traffic.length ? traffic : [{ time: "N/A", count: 0 }],
-            departments: departments.length ? departments : [{ name: "N/A", share: 0, growth: "0%", status: "N/A" }],
-            activity: activity.length ? activity : [{ id: 1, type: "System", title: "No recent activity", time: "Now", status: "Idle" }]
+            traffic: traffic,
+            departments: departments.length ? departments : [{ name: "General", share: 100, growth: "0%", status: "Optimal" }],
+            activity: activity.length ? activity : [{ id: 1, type: "System", title: "No recent activity", time: "Now", status: "Idle" }],
+            activeStaff: activeStaffCount || 0
         };
 
         const { count: staffCount } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('branch_id', targetBranchId);

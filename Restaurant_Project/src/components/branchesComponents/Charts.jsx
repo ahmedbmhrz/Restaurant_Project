@@ -68,7 +68,7 @@ export function Charts({ data }) {
                 <div className="mt-6 flex items-center justify-center">
                     <div className="flex items-center gap-1.5 rounded-full bg-indigo-500/5 px-3 py-1 ring-1 ring-indigo-500/10">
                         <Users className="h-3 w-3 text-indigo-500" />
-                        <span className="text-[9px] font-bold text-indigo-600/80 tracking-tight">Active Terminals: 12</span>
+                        <span className="text-[9px] font-bold text-indigo-600/80 tracking-tight">Active Staff: {data.activeStaff || 0}</span>
                     </div>
                 </div>
             </div>

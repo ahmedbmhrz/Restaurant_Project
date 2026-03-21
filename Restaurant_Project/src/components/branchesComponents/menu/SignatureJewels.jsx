@@ -35,7 +35,6 @@ export function SignatureJewels({ items }) {
                         </div>
                         <div className="flex flex-col items-end">
                             <span className="text-sm font-black text-foreground/80">{item.price}</span>
-                            <ChevronRight className="h-3 w-3 text-muted-foreground/40 group-hover/item:text-amber-500 transition-colors" />
                         </div>
                     </div>
                 ))}
