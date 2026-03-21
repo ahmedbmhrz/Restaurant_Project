@@ -7,7 +7,7 @@ import { UtensilsCrossed, Package, Plus } from "lucide-react"
 import { ProductList } from "./menu_management/ProductList"
 import { AddProductForm } from "./menu_management/AddProductForm"
 
-export function MenuManagementSheet({ products = [], branchId }) {
+export function MenuManagementSheet({ products = [], branchId, refreshData }) {
     
     const handleUpdateStock = async (productId, newStock) => {
         try {
@@ -20,7 +20,7 @@ export function MenuManagementSheet({ products = [], branchId }) {
                     stock_quantity: parseInt(newStock)
                 })
             });
-            window.location.reload();
+            if (refreshData) refreshData();
         } catch (err) {
             console.error("Stock update failed:", err);
         }
@@ -33,14 +33,14 @@ export function MenuManagementSheet({ products = [], branchId }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_active: !currentStatus })
             });
-            window.location.reload();
+            if (refreshData) refreshData();
         } catch (err) {
             console.error("Status toggle failed:", err);
         }
     };
 
     const handleAddComplete = () => {
-        window.location.reload();
+        if (refreshData) refreshData();
     };
 
     return (
@@ -83,6 +83,7 @@ export function MenuManagementSheet({ products = [], branchId }) {
                             products={products} 
                             onUpdateStock={handleUpdateStock} 
                             onToggleActive={handleToggleActive} 
+                            refreshData={refreshData}
                         />
                     </TabsContent>
 

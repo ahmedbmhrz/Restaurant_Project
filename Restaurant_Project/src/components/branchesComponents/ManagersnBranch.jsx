@@ -6,6 +6,13 @@ import { ManagerProfileModal } from "./ManagerProfileModal"
 export function ManagersnBranch({ managers = [], onSelectManager, selectedBranchId }) {
     const [selectedManager, setSelectedManager] = useState(null);
 
+    const handleJumpToBranch = (branchId) => {
+        if (onSelectManager) {
+            onSelectManager(branchId);
+            setSelectedManager(null); // Close modal after jumping
+        }
+    };
+
     return (
         <div className="h-full flex flex-col overflow-hidden">
             <h2 className="text-xl font-bold mb-4 flex-none">Branch Managers</h2>
@@ -27,6 +34,7 @@ export function ManagersnBranch({ managers = [], onSelectManager, selectedBranch
                 manager={selectedManager}
                 isOpen={!!selectedManager}
                 onOpenChange={(open) => !open && setSelectedManager(null)}
+                onJumpToBranch={() => handleJumpToBranch(selectedManager?.branch_id)}
             />
         </div>
     )

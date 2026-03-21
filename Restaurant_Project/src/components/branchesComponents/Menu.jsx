@@ -10,7 +10,7 @@ import { SignatureJewels } from "./menu/SignatureJewels"
 import { MenuQuote } from "./menu/MenuQuote"
 import { MenuManagementSheet } from "./MenuManagementSheet"
 
-export function Menu({ data, branchId }) {
+export function Menu({ data, branchId, refreshData }) {
     if (!data) return null;
 
     return (
@@ -41,6 +41,7 @@ export function Menu({ data, branchId }) {
                                 <MenuManagementSheet 
                                     products={data.fullProductList} 
                                     branchId={branchId} 
+                                    refreshData={refreshData}
                                 />
                             </div>
                         </CardHeader>

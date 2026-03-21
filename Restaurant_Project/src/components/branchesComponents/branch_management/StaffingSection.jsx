@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Users, UserPlus, X, Check, Loader2, AlertCircle } from "lucide-react"
 
-export function StaffingSection({ staffList, onTransfer, branchId }) {
+export function StaffingSection({ staffList, onTransfer, branchId, refreshData }) {
     const [isAdding, setIsAdding] = useState(false);
     const [newName, setNewName] = useState("");
     const [newRole, setNewRole] = useState("Waiter");
@@ -27,7 +27,9 @@ export function StaffingSection({ staffList, onTransfer, branchId }) {
             });
             
             if (res.ok) {
-                window.location.reload();
+                if (refreshData) refreshData();
+                setIsAdding(false);
+                setNewName("");
             } else {
                 const data = await res.json();
                 setErrorMsg(data.error || "Failed to hire staff member.");

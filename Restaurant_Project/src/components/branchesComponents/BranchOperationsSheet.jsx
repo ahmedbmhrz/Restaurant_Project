@@ -9,7 +9,7 @@ import { LeadershipSection } from "./branch_management/LeadershipSection"
 import { StaffingSection } from "./branch_management/StaffingSection"
 import { EmergencyControls } from "./branch_management/EmergencyControls"
 
-export function BranchOperationsSheet({ data, staffList = [], allUsers = [] }) {
+export function BranchOperationsSheet({ data, staffList = [], allUsers = [], refreshData }) {
     
     const handleUpdateBranch = async (payload) => {
         try {
@@ -18,7 +18,7 @@ export function BranchOperationsSheet({ data, staffList = [], allUsers = [] }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            if (res.ok) window.location.reload(); 
+            if (res.ok && refreshData) refreshData(); 
         } catch (error) {
             console.error("Failed to update branch:", error);
         }
@@ -31,7 +31,7 @@ export function BranchOperationsSheet({ data, staffList = [], allUsers = [] }) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ branch_id: newBranchId, role: newRole })
             });
-            window.location.reload();
+            if (refreshData) refreshData();
         } catch (error) {
             console.error("Failed to transfer staff:", error);
         }
@@ -79,6 +79,7 @@ export function BranchOperationsSheet({ data, staffList = [], allUsers = [] }) {
                         staffList={staffList} 
                         onTransfer={handleTransferStaff} 
                         branchId={data.id}
+                        refreshData={refreshData}
                     />
 
                     {/* Section 4: Emergency Controls */}

@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Building2, TrendingUp, Users, MapPin, Info } from "lucide-react"
 import { BranchOperationsSheet } from "./BranchOperationsSheet"
 
-export function Branch({ data, staffList, allUsers }) {
+export function Branch({ data, staffList, allUsers, refreshData }) {
     if (!data) return null;
 
     return (
@@ -88,6 +88,7 @@ export function Branch({ data, staffList, allUsers }) {
                             data={data} 
                             staffList={staffList} 
                             allUsers={allUsers} 
+                            refreshData={refreshData}
                         />
                     </CardFooter>
                 </Card>

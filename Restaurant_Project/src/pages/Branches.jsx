@@ -22,37 +22,38 @@ function Branches() {
     const [selectedBranchId, setSelectedBranchId] = useState(null);
     const [isFetching, setIsFetching] = useState(false);
 
+    const fetchPageData = async () => {
+        setIsFetching(true);
+        try {
+            const url = selectedBranchId
+                ? `http://localhost:5000/api/branches-page-data?branchId=${selectedBranchId}`
+                : 'http://localhost:5000/api/branches-page-data';
+
+            const res = await fetch(url, { cache: 'no-store' });
+            const data = await res.json();
+
+            const formattedManagers = data.managers.map((m) => {
+                return {
+                    ...m,
+                    role: m.role ? m.role.replace('_', ' ') : 'Managing Director',
+                    isTopManager: m.branch_id === data.targetBranchId
+                };
+            });
+
+            setPageData({
+                ...data,
+                managers: formattedManagers
+            });
+        } catch (error) {
+            console.error("Error loading branch page data:", error);
+        } finally {
+            setIsFetching(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchPageData = async () => {
-            setIsFetching(true);
-            try {
-                const url = selectedBranchId
-                    ? `http://localhost:5000/api/branches-page-data?branchId=${selectedBranchId}`
-                    : 'http://localhost:5000/api/branches-page-data';
-
-                const res = await fetch(url, { cache: 'no-store' });
-                const data = await res.json();
-
-                const formattedManagers = data.managers.map((m) => {
-                    return {
-                        ...m,
-                        role: m.role ? m.role.replace('_', ' ') : 'Managing Director',
-                        isTopManager: m.branch_id === data.targetBranchId
-                    };
-                });
-
-                setPageData({
-                    ...data,
-                    managers: formattedManagers
-                });
-            } catch (error) {
-                console.error("Error loading branch page data:", error);
-            } finally {
-                setIsFetching(false);
-            }
-        };
         fetchPageData();
-    }, [selectedBranchId]); // Add selectedBranchId as dependency!
+    }, [selectedBranchId]); 
 
     if (!pageData) {
         return (
@@ -114,6 +115,7 @@ function Branches() {
                                             data={pageData.branchesFromDb[0]} 
                                             staffList={pageData.operationalData.fullStaffList}
                                             allUsers={pageData.operationalData.allUsers}
+                                            refreshData={fetchPageData}
                                         />
                                     </TabsContent>
                                     <TabsContent value="manager" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
@@ -126,6 +128,7 @@ function Branches() {
                                         <Menu 
                                             data={pageData.menuData} 
                                             branchId={pageData.targetBranchId} 
+                                            refreshData={fetchPageData}
                                         />
                                     </TabsContent>
                                     <TabsContent value="charts" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
