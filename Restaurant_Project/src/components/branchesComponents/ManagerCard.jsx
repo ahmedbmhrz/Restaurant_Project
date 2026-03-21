@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-export function ManagerCard({ name, role, avatarSrc, avatarFallback, achievement, onClick, isSelected }) {
+export function ManagerCard({ name, role, avatarSrc, avatarFallback, achievement, onClick, onProfileClick, isSelected }) {
     return (
         <Card 
             className={`p-4 cursor-pointer transition-all duration-300 relative overflow-hidden ${
@@ -24,7 +24,17 @@ export function ManagerCard({ name, role, avatarSrc, avatarFallback, achievement
                     <h4 className="font-semibold text-sm">{name}</h4>
                     <p className="text-xs text-muted-foreground">{role}</p>
                 </div>
-                <Button size="sm" variant="outline">Profile</Button>
+                <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-7 text-[10px] font-bold"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onProfileClick && onProfileClick();
+                    }}
+                >
+                    Profile
+                </Button>
             </div>
             {achievement && (
                 <p className="mt-3 text-xs text-muted-foreground">

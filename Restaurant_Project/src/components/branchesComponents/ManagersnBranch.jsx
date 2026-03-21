@@ -1,8 +1,11 @@
-import { Card } from "@/components/ui/card"
+import { useState } from "react"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { ManagerCard } from "./ManagerCard"
+import { ManagerProfileModal } from "./ManagerProfileModal"
 
 export function ManagersnBranch({ managers = [], onSelectManager, selectedBranchId }) {
+    const [selectedManager, setSelectedManager] = useState(null);
+
     return (
         <div className="h-full flex flex-col overflow-hidden">
             <h2 className="text-xl font-bold mb-4 flex-none">Branch Managers</h2>
@@ -13,13 +16,18 @@ export function ManagersnBranch({ managers = [], onSelectManager, selectedBranch
                             key={index} 
                             {...manager} 
                             onClick={() => onSelectManager && onSelectManager(manager.branch_id)}
+                            onProfileClick={() => setSelectedManager(manager)}
                             isSelected={manager.branch_id === selectedBranchId}
                         />
                     ))}
                 </div>
             </ScrollArea>
-        </div>
 
+            <ManagerProfileModal 
+                manager={selectedManager}
+                isOpen={!!selectedManager}
+                onOpenChange={(open) => !open && setSelectedManager(null)}
+            />
+        </div>
     )
 }
-

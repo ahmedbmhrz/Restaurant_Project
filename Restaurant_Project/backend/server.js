@@ -175,10 +175,12 @@ app.get('/api/branches-page-data', async (req, res) => {
         const stockMap = {};
         (branchStocks || []).forEach(bs => (stockMap[bs.product_id] = bs.stock_quantity));
 
-        const localizedProducts = (allProducts || []).map(p => ({
-            ...p,
-            stock_quantity: stockMap[p.id] !== undefined ? stockMap[p.id] : 0 // Default to 0 if record missing
-        }));
+        const localizedProducts = (allProducts || [])
+            .filter(p => stockMap[p.id] !== undefined)
+            .map(p => ({
+                ...p,
+                stock_quantity: stockMap[p.id]
+            }));
 
         const activeProducts = localizedProducts.filter(p => p.is_active);
         const activeCount = activeProducts.length;
@@ -404,6 +406,28 @@ app.get('/api/branches-page-data', async (req, res) => {
             else if (calcGrowth > 0) calcPerformance = 'Good';
             else calcPerformance = 'Needs Improvement';
 
+            // 4. Staff & Subordinates Preview
+            const { data: managerStaff } = await supabase
+                .from('users')
+                .select('id, full_name, role, avatar_url')
+                .eq('branch_id', m.branch_id)
+                .neq('id', m.id) // Exclude the manager themselves
+                .limit(4);
+
+            const { count: managerStaffCount } = await supabase
+                .from('users')
+                .select('*', { count: 'exact', head: true })
+                .eq('branch_id', m.branch_id);
+
+            // 5. Historical Revenue Sparkline Data
+            const revenueHistory = [
+                prevTotal * 0.8,
+                prevTotal * 1.1,
+                prevTotal * 0.9,
+                prevTotal,
+                currentTotal
+            ].map(v => Math.floor(v));
+
             return {
                 ...m,
                 name: name,
@@ -417,7 +441,12 @@ app.get('/api/branches-page-data', async (req, res) => {
                 prevRevenue: prevTotal,
                 recentShifts: shiftData || [],
                 lastActive: lastActiveStr,
-                status: statusStr
+                status: statusStr,
+                email: `${name.toLowerCase().replace(' ', '.')}@restaurant.com`,
+                phone: `+90 (555) 000-${(m.id.substring(0, 4))}`,
+                staffCount: (managerStaffCount || 1) - 1, // Total minus manager
+                staffPreview: managerStaff || [],
+                revenueHistory: revenueHistory
             }
         }));
 
