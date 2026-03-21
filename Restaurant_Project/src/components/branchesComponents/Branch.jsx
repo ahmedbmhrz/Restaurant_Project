@@ -26,7 +26,7 @@ export function Branch({ data }) {
                                     <CardTitle className="text-xl font-bold tracking-tight">{data.name}</CardTitle>
                                     <CardDescription className="flex items-center gap-1 mt-0.5">
                                         <MapPin className="h-3 w-3" />
-                                        {data.location}
+                                        {data.address}
                                     </CardDescription>
                                 </div>
                             </div>
