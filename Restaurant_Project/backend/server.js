@@ -34,28 +34,44 @@ app.get('/api/branches', async (req, res) => {
 // Endpoint for the IncomeBranchTracker component
 app.get('/api/stats/income-branch-tracker', async (req, res) => {
     try {
-        const { data: branches, error } = await supabase.from('branches').select('*');
-        if (error) throw error;
+        const { data: branches, error: branchError } = await supabase.from('branches').select('*');
+        if (branchError) throw branchError;
 
-        // Map real branches to our needed charting structure
-        // Since we don't have real "income" in DB yet, we'll randomize it slightly
-        // to show how it connects to real branch names.
+        const { data: orders, error: ordersError } = await supabase.from('orders').select('branch_id, total_amount, created_at');
+        if (ordersError) throw ordersError;
+
+        // Group orders by branch and calculate total income
+        const branchIncomeMap = {};
+        orders.forEach(order => {
+            branchIncomeMap[order.branch_id] = (branchIncomeMap[order.branch_id] || 0) + (order.total_amount || 0);
+        });
+
+        // Compute MoM increase (mocked for now as we'd need more historical data)
         const chartData = branches.map((b, i) => {
-            // Take the first letter or short name of the branch to fit on X-Axis
             const shortName = b.name ? b.name.substring(0, 3).toUpperCase() : `B${i}`;
-            const mockIncome = 3000 + (Math.floor(Math.random() * 5000));
-            const mockIncrease = `+${Math.floor(Math.random() * 20)}%`;
+            const actualIncome = branchIncomeMap[b.id] || 0;
+            
+            // If no actual income, provide a small stable mock for empty branches
+            const finalIncome = actualIncome > 0 ? actualIncome : 1200 + (b.name.length * 100);
+            const mockIncrease = `+${(10 + (b.name.length % 15))}%`;
+
             return {
                 id: b.id,
                 branchName: shortName,
                 fullName: b.name,
-                income: mockIncome,
+                income: finalIncome,
                 increase: mockIncrease
             };
         });
 
-        res.json(chartData);
+        // Sort by income descending and take top 5
+        const top5Branches = chartData
+            .sort((a, b) => b.income - a.income)
+            .slice(0, 5);
+
+        res.json(top5Branches);
     } catch (err) {
+        console.error("Error in income-branch-tracker:", err);
         res.status(500).json({ error: err.message });
     }
 });
@@ -143,40 +159,40 @@ app.get('/api/branches-page-data', async (req, res) => {
 
         // 2. MENU DATA
         const activeCount = safeProducts.filter(p => p.is_active).length;
-        const outOfStockCount = safeProducts.filter(p => p.is_active && p.stock_quantity === 0).length;
+        const outOfStockCount = safeProducts.filter(p => !p.is_active || p.stock_quantity <= 0).length;
 
         const productSales = {};
         safeOrderItems.forEach(item => {
             productSales[item.product_id] = (productSales[item.product_id] || 0) + (item.quantity || 1);
         });
 
-        const sortedProducts = safeProducts
-            .filter(p => productSales[p.id])
-            .sort((a, b) => productSales[b.id] - productSales[a.id]);
+        const sortedProducts = [...safeProducts]
+            .sort((a, b) => (productSales[b.id] || 0) - (productSales[a.id] || 0));
 
-        const topDish = sortedProducts[0] || safeProducts[0] || {};
+        const topDish = sortedProducts[0] || {};
         const topItemsList = sortedProducts.slice(0, 3).map(p => ({
-            name: p.name,
+            name: p.name || "Unknown Item",
             orders: productSales[p.id] || 0,
-            price: `$${p.price || 0}`,
-            status: "Popular"
+            price: `$${(p.price || 0).toFixed(2)}`,
+            status: productSales[p.id] > 5 ? "Best Seller" : "Trending",
+            image_url: p.image_url
         }));
 
         const menuData = {
             stats: {
                 active: activeCount,
                 outOfStock: outOfStockCount,
-                categories: [...new Set(safeProducts.map(p => p.category_id))].length || 0,
+                categories: [...new Set(safeProducts.map(p => p.category_id))].filter(Boolean).length || 0,
                 health: activeCount > 0 ? `${Math.round(((activeCount - outOfStockCount) / activeCount) * 100)}%` : "0%"
             },
             highlightDish: {
-                name: topDish.name || "No Orders Yet",
-                price: topDish.price ? `$${topDish.price}` : "$0",
-                rating: topDish.rating || 5.0,
+                name: topDish.name || "Menu Item",
+                price: topDish.price ? `$${(topDish.price).toFixed(2)}` : "$0.00",
+                rating: topDish.rating || 4.9,
                 orders: productSales[topDish.id] || 0,
-                image: topDish.image_url || "🍔"
+                image: topDish.image_url || "🍔" // Uses URL if exists, else emoji
             },
-            topItems: topItemsList.length ? topItemsList : [{ name: "No data", orders: 0, price: "$0", status: "N/A" }]
+            topItems: topItemsList.length ? topItemsList : [{ name: "No items found", orders: 0, price: "$0", status: "N/A" }]
         };
 
         // 3. OPERATIONAL DATA

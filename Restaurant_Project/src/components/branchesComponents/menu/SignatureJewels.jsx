@@ -15,8 +15,12 @@ export function SignatureJewels({ items }) {
                 {items.map((item, idx) => (
                     <div key={idx} className="group/item relative flex items-center justify-between rounded-2xl bg-background/40 p-3 ring-1 ring-border/50 transition-all duration-300 hover:bg-background/80 hover:ring-amber-500/30 hover:shadow-lg">
                         <div className="flex items-center gap-3">
-                            <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-muted/50 text-xl font-bold transition-transform group-hover/item:scale-110">
-                                {idx + 1}
+                            <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-muted/50 text-xl font-bold transition-transform group-hover/item:scale-110 overflow-hidden ring-1 ring-border/50">
+                                {item.image_url ? (
+                                    <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+                                ) : (
+                                    idx + 1
+                                )}
                             </div>
                             <div>
                                 <div className="text-sm font-bold tracking-tight">{item.name}</div>

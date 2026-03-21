@@ -4,10 +4,22 @@ import { Star } from "lucide-react"
 export function MenuSpotlight({ dish }) {
     if (!dish) return null;
 
+    const isImage = dish.image?.startsWith('http');
+
     return (
         <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-amber-500/10 to-transparent p-5 ring-1 ring-amber-500/20 mb-6 group/dish">
             <div className="flex items-start justify-between mb-4">
-                <div className="text-4xl">{dish.image}</div>
+                <div className="text-4xl">
+                    {isImage ? (
+                        <img 
+                            src={dish.image} 
+                            alt={dish.name} 
+                            className="h-12 w-12 rounded-xl object-cover shadow-lg ring-1 ring-white/20"
+                        />
+                    ) : (
+                        dish.image
+                    )}
+                </div>
                 <Badge variant="outline" className="bg-background/80 backdrop-blur-md px-2.5 py-1 text-xs font-bold text-amber-600 border-amber-500/20">
                     <Star className="h-3.5 w-3.5 fill-amber-500 mr-1.5" />
                     {dish.rating}

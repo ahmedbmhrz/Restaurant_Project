@@ -60,16 +60,24 @@ export function IncomeBranchTracker() {
                 <CardTitle className="text-2xl">Income Branch Tracker</CardTitle>
             </CardHeader>
             <CardContent className="pl-2 flex flex-row items-end justify-between">
-                <div className="flex flex-col space-y-2 p-5">
-                    <h3 className="text-3xl font-bold">
-                        {activeBranch ? activeBranch.increase : "Select a branch"}
-                    </h3>
-                    <p className="text-sm text-muted-foreground w-32">
-                        Branch {activeBranch ? activeBranch.branchName : "--"} vs last month
+                <div className="flex flex-col space-y-1 p-5">
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                        {activeBranch ? activeBranch.fullName : "Select a branch"}
                     </p>
+                    <h3 className="text-4xl font-black text-primary">
+                        ${activeBranch ? activeBranch.income.toLocaleString() : "0"}
+                    </h3>
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                            {activeBranch ? activeBranch.increase : "0%"}
+                        </span>
+                        <p className="text-xs text-muted-foreground italic">
+                            vs last month
+                        </p>
+                    </div>
                 </div>
-                <ChartContainer config={chartConfig} className="min-h-52 w-96">
-                    <BarChart accessibilityLayer data={chartData}>
+                <ChartContainer config={chartConfig} className="min-h-52 w-96 mr-4">
+                    <BarChart accessibilityLayer data={chartData} margin={{ top: 20 }}>
                         <XAxis
                             dataKey="branchName" // Tells it to use the "branchName" field (A, B, C...)
                             tickLine={false}// Hides the little tick marks
@@ -88,7 +96,8 @@ export function IncomeBranchTracker() {
                             {chartData.map((entry, index) => (
                                 <Cell
                                     key={`cell-${index}`}
-                                    fill={activeBranch.branchName === entry.branchName ? "var(--color-income)" : "#e5e7eb"}
+                                    fill={activeBranch?.id === entry.id ? "var(--color-income)" : "#f3f4f6"}
+                                    className="transition-all duration-300"
                                 />
 
 
