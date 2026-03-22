@@ -7,7 +7,6 @@ import { Link } from "react-router-dom"
 import { Pizza } from "lucide-react"
 
 /**
- * NAVBAR COMPONENT
  * The main header orchestrator for the Nexus Food management platform.
  * Assembles modular sub-components (Brand, Search, Actions, Nav, Notifications, Profile)
  * into a responsive, sticky navigation bar.
