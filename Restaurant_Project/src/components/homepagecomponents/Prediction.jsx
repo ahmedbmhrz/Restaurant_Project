@@ -1,4 +1,4 @@
-
+import { Link } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -9,7 +9,7 @@ import {
 
 export function Prediction() {
     return (
-        <Card className="h-60 flex-1 flex flex-col bg-gray-300 border-1 border-black">
+        <Card className="h-60 flex-1 flex flex-col bg-gray-300 border border-black">
             <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-medium">
                     Prediction
@@ -21,13 +21,13 @@ export function Prediction() {
                         Branch A and C are projected to have better income next month based on current trends.
                     </p>
                 </div>
-                <Button variant="secondary" className="w-full justify-between bg-muted/80">
-                    More predictions
-                    <span className="text-xs opacity-50">→</span>
-                </Button>
+                <Link to="/ai-prediction">
+                    <Button variant="secondary" className="w-full justify-between bg-muted/80">
+                        More predictions
+                        <span className="text-xs opacity-50">→</span>
+                    </Button>
+                </Link>
             </CardContent>
         </Card>
-
-
     )
 }

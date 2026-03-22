@@ -11,7 +11,7 @@ export function BranchManager() {
     useEffect(() => {
         const fetchManagers = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/stats/branch-managers')
+                const res = await fetch('http://localhost:5000/api/branch-managers')
                 const data = await res.json()
                 setManagers(data)
                 setLoading(false)
