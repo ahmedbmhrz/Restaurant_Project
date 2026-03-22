@@ -113,6 +113,7 @@ function Branches() {
                                     <TabsContent value="branch" className="mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500">
                                         <Branch 
                                             data={pageData.branchesFromDb[0]} 
+                                            allBranches={pageData.allBranches}
                                             staffList={pageData.operationalData.fullStaffList}
                                             allUsers={pageData.operationalData.allUsers}
                                             refreshData={fetchPageData}

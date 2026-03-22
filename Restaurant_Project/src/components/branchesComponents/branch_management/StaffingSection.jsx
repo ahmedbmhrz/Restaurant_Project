@@ -5,7 +5,7 @@ import { StaffHeader } from "./staffing/StaffHeader"
 import { HireStaffForm } from "./staffing/HireStaffForm"
 import { StaffListItem } from "./staffing/StaffListItem"
 
-export function StaffingSection({ staffList, onTransfer, branchId, refreshData }) {
+export function StaffingSection({ staffList, allBranches, onTransfer, branchId, refreshData }) {
     const [isAdding, setIsAdding] = useState(false);
 
     const handleHireSuccess = () => {
@@ -34,6 +34,7 @@ export function StaffingSection({ staffList, onTransfer, branchId, refreshData }
                     <StaffListItem
                         key={staff.id}
                         staff={staff}
+                        allBranches={allBranches}
                         onTransfer={onTransfer}
                     />
                 )) : (

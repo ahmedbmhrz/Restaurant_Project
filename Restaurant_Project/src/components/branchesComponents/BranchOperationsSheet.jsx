@@ -9,7 +9,7 @@ import { LeadershipSection } from "./branch_management/LeadershipSection"
 import { StaffingSection } from "./branch_management/StaffingSection"
 import { EmergencyControls } from "./branch_management/EmergencyControls"
 
-export function BranchOperationsSheet({ data, staffList = [], allUsers = [], refreshData }) {
+export function BranchOperationsSheet({ data, allBranches = [], staffList = [], allUsers = [], refreshData }) {
     
     const handleUpdateBranch = async (payload) => {
         try {
@@ -77,6 +77,7 @@ export function BranchOperationsSheet({ data, staffList = [], allUsers = [], ref
                     {/* Section 3: Staff Management */}
                     <StaffingSection 
                         staffList={staffList} 
+                        allBranches={allBranches}
                         onTransfer={handleTransferStaff} 
                         branchId={data.id}
                         refreshData={refreshData}

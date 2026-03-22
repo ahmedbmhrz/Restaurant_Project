@@ -107,11 +107,13 @@ app.get('/api/branches-page-data', async (req, res) => {
         // Determine target branch
         const targetBranchId = branchId || (managers && managers.length > 0 ? managers[0].branch_id : "11111111-1111-1111-1111-111111111111");
 
-        // Branch Details: return only the targeted branch
-        let branchesQuery = supabase.from('branches').select('*');
-        if (targetBranchId) branchesQuery = branchesQuery.eq('id', targetBranchId);
-        const { data: branches, error: branchError } = await branchesQuery;
-        if (branchError) throw branchError;
+        // Branch Details (All): fetch all branches to support transfers and selection
+        const { data: allDbBranches, error: allBranchError } = await supabase.from('branches').select('*');
+        if (allBranchError) throw allBranchError;
+
+        // Target Branch: isolate the specifically targeted location
+        const targetBranch = (allDbBranches || []).find(b => b.id === targetBranchId) || (allDbBranches?.[0]);
+        const branches = targetBranch ? [targetBranch] : [];
 
         // Orders: filter by targeted branch
         let ordersQuery = supabase.from('orders').select('*');
@@ -317,7 +319,7 @@ app.get('/api/branches-page-data', async (req, res) => {
         // Fetch all staff for this branch
         const { data: branchStaff } = await supabase
             .from('users')
-            .select('id, full_name, role, avatar_url')
+            .select('id, full_name, role, avatar_url, branch_id')
             .eq('branch_id', targetBranchId);
 
         // Fetch all potential managers (all users for simplicity in this demo, or filter by role)
@@ -336,14 +338,16 @@ app.get('/api/branches-page-data', async (req, res) => {
 
         const { count: staffCount } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('branch_id', targetBranchId);
 
-        const enrichedBranches = (branches || []).map(b => ({
+        const enrichedAllBranches = (allDbBranches || []).map(b => ({
             ...b,
-            revenue: `$${(totalIncome || 0).toLocaleString()}`,
-            staff: `${staffCount || 0} Active Staff`,
-            growth: "+15.2%",
+            revenue: b.id === targetBranchId ? `$${(totalIncome || 0).toLocaleString()}` : "$0", // Simplified for non-target
+            staff: b.id === targetBranchId ? `${staffCount || 0} Active Staff` : "View Staff",
+            growth: "+0%",
             description: b.description || "Premium dining location with excellent service and high continuous foot traffic globally.",
             address: b.address || "Headquarters Building"
         }));
+
+        const enrichedTargetBranches = enrichedAllBranches.filter(b => b.id === targetBranchId);
 
         const enrichedManagers = await Promise.all((managers || []).map(async m => {
             const name = m.full_name || m.name || 'Branch Manager';
@@ -412,7 +416,7 @@ app.get('/api/branches-page-data', async (req, res) => {
             // 4. Staff & Subordinates Preview
             const { data: managerStaff } = await supabase
                 .from('users')
-                .select('id, full_name, role, avatar_url')
+                .select('id, full_name, role, avatar_url, branch_id')
                 .eq('branch_id', m.branch_id)
                 .neq('id', m.id) // Exclude the manager themselves
                 .limit(4);
@@ -455,9 +459,10 @@ app.get('/api/branches-page-data', async (req, res) => {
         }));
 
         res.json({
-            branchesFromDb: enrichedBranches,
+            allBranches: enrichedAllBranches, 
+            branchesFromDb: enrichedTargetBranches, 
             managers: enrichedManagers,
-            targetBranchId, // Return this so the frontend knows what is actively targeted
+            targetBranchId, 
             incomeData,
             menuData,
             operationalData
