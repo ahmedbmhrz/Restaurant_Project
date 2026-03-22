@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-export function ManagerCard({ name, role, avatarSrc, avatarFallback, achievement, onClick, onProfileClick, isSelected }) {
+export function ManagerCard({ name, role, branchName, avatarSrc, avatarFallback, achievement, onClick, onProfileClick, isSelected }) {
     return (
         <Card 
             className={`p-4 cursor-pointer transition-all duration-300 relative overflow-hidden ${
@@ -22,7 +22,7 @@ export function ManagerCard({ name, role, avatarSrc, avatarFallback, achievement
                 </Avatar>
                 <div className="flex-1">
                     <h4 className="font-semibold text-sm">{name}</h4>
-                    <p className="text-xs text-muted-foreground">{role}</p>
+                    <p className="text-xs text-muted-foreground">{branchName || role}</p>
                 </div>
                 <Button 
                     size="sm" 

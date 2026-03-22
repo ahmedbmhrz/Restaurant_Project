@@ -40,46 +40,46 @@ export function HireStaffForm({ branchId, onSuccess }) {
     };
 
     return (
-        <div className="bg-primary/5 border border-primary/10 rounded-2xl p-4 space-y-4 animate-in zoom-in-95 duration-300">
-            <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold uppercase ml-1">Full Name</Label>
+        <div className="bg-primary/5 border border-primary/10 rounded-2xl p-3 space-y-3 animate-in zoom-in-95 duration-300">
+            <div className="grid grid-cols-2 gap-2.5">
+                <div className="space-y-1">
+                    <Label className="text-[9px] font-bold uppercase ml-1 opacity-70">Full Name</Label>
                     <input 
-                        className="w-full bg-background border border-border/50 rounded-lg px-3 py-2 text-xs font-bold focus:ring-2 focus:ring-primary/20 outline-none"
-                        placeholder="Employee name..."
+                        className="w-full bg-background border border-border/50 rounded-lg px-2.5 py-1.5 text-[11px] font-bold focus:ring-2 focus:ring-primary/20 outline-none"
+                        placeholder="Name..."
                         value={newName}
                         onChange={(e) => setNewName(e.target.value)}
                     />
                 </div>
-                <div className="space-y-1.5">
-                    <Label className="text-[10px] font-bold uppercase ml-1">Duty / Role</Label>
+                <div className="space-y-1">
+                    <Label className="text-[9px] font-bold uppercase ml-1 opacity-70">Duty / Role</Label>
                     <select 
-                        className="w-full bg-background border border-border/50 rounded-lg px-3 py-2 text-xs font-bold appearance-none cursor-pointer focus:ring-2 focus:ring-primary/20 outline-none"
+                        className="w-full bg-background border border-border/50 rounded-lg px-2.5 py-1.5 text-[11px] font-bold appearance-none cursor-pointer focus:ring-2 focus:ring-primary/20 outline-none"
                         value={newRole}
                         onChange={(e) => setNewRole(e.target.value)}
                     >
-                        <option value="Waiter">Waiter / Server</option>
-                        <option value="Chef">Chef / Kitchen</option>
-                        <option value="Manager">Assistant Manager</option>
-                        <option value="Host">Host / Reception</option>
-                        <option value="Security">Security / Safety</option>
+                        <option value="Waiter">Waiter</option>
+                        <option value="Chef">Chef</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Host">Host</option>
+                        <option value="Security">Security</option>
                     </select>
                 </div>
             </div>
 
             {errorMsg && (
-                <div className="bg-rose-500/10 text-rose-600 text-[10px] font-bold p-2.5 rounded-xl border border-rose-500/20 flex items-center gap-2 animate-in slide-in-from-top-1">
-                    <AlertCircle className="h-3 w-3" /> {errorMsg}
+                <div className="bg-rose-500/10 text-rose-600 text-[9px] font-bold p-2 rounded-xl border border-rose-500/20 flex items-center gap-2 animate-in slide-in-from-top-1">
+                    <AlertCircle className="h-2.5 w-2.5" /> {errorMsg}
                 </div>
             )}
 
             <Button 
                 onClick={handleHire}
                 disabled={isSaving || !newName}
-                className="w-full h-9 text-[10px] font-black uppercase tracking-widest gap-2 rounded-xl shadow-lg shadow-primary/10"
+                className="w-full h-8 text-[9px] font-black uppercase tracking-widest gap-2 rounded-xl shadow-md shadow-primary/5"
             >
-                {isSaving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
-                Confirm Hire Instance
+                {isSaving ? <Loader2 className="h-2.5 w-2.5 animate-spin" /> : <Check className="h-2.5 w-2.5" />}
+                Confirm Hire
             </Button>
         </div>
     );

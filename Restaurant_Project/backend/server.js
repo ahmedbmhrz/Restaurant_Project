@@ -97,8 +97,11 @@ app.get('/api/branches-page-data', async (req, res) => {
     try {
         const branchId = req.query.branchId || req.query.branch;
 
-        // Managers: Always fetch all managers for the sidebar
-        const { data: managers, error: managerError } = await supabase.from('users').select('*').eq('role', 'Branch_Manager');
+        // Managers: Always fetch all managers for the sidebar, including their branch names
+        const { data: managers, error: managerError } = await supabase
+            .from('users')
+            .select('*, branches(name)')
+            .eq('role', 'Branch_Manager');
         if (managerError) throw managerError;
 
         // Determine target branch
@@ -431,6 +434,7 @@ app.get('/api/branches-page-data', async (req, res) => {
             return {
                 ...m,
                 name: name,
+                branchName: m.branches?.name || 'Unknown Branch',
                 avatarSrc: m.avatar_url || undefined,
                 avatarFallback: initials,
                 role: m.role || 'Managing Director',

@@ -11,15 +11,15 @@ export function EmergencyControls() {
             </h3>
 
             <div className="space-y-4">
-                <div className="flex items-center justify-between rounded-2xl border border-rose-100 bg-rose-50/30 p-4 transition-all hover:shadow-md cursor-default">
+                <div className="flex items-center justify-between rounded-xl border border-rose-100 bg-rose-50/30 p-3 transition-all hover:shadow-md cursor-default">
                     <div className="space-y-0.5 pr-4">
-                        <Label className="text-sm font-bold text-rose-900">Block New Orders</Label>
-                        <p className="text-[11px] text-rose-600/70 font-medium">Pause all incoming digital traffic immediately.</p>
+                        <Label className="text-xs font-bold text-rose-900">Block New Orders</Label>
+                        <p className="text-[10px] text-rose-600/70 font-medium">Pause all incoming traffic.</p>
                     </div>
-                    <Switch className="data-[state=checked]:bg-rose-600" />
+                    <Switch className="scale-75 data-[state=checked]:bg-rose-600" />
                 </div>
 
-                <Button variant="destructive" className="w-full h-12 text-xs font-black rounded-xl shadow-[0_0_20px_rgba(225,29,72,0.15)] hover:bg-rose-600 transition-all uppercase tracking-widest">
+                <Button variant="destructive" className="w-full h-10 text-[10px] font-black rounded-lg shadow-md shadow-rose-500/5 hover:bg-rose-600 transition-all uppercase tracking-widest">
                     Shutdown Branch Instance
                 </Button>
             </div>

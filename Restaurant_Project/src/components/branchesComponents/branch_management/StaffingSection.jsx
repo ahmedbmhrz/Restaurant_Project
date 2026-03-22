@@ -15,26 +15,26 @@ export function StaffingSection({ staffList, onTransfer, branchId, refreshData }
 
     return (
         <div className="space-y-6">
-            <StaffHeader 
-                count={staffList.length} 
-                isAdding={isAdding} 
-                onToggleAdding={setIsAdding} 
+            <StaffHeader
+                count={staffList.length}
+                isAdding={isAdding}
+                onToggleAdding={setIsAdding}
             />
 
             {/* Quick Hire Form */}
             {isAdding && (
-                <HireStaffForm 
-                    branchId={branchId} 
-                    onSuccess={handleHireSuccess} 
+                <HireStaffForm
+                    branchId={branchId}
+                    onSuccess={handleHireSuccess}
                 />
             )}
 
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                 {staffList.length > 0 ? staffList.map((staff) => (
-                    <StaffListItem 
-                        key={staff.id} 
-                        staff={staff} 
-                        onTransfer={onTransfer} 
+                    <StaffListItem
+                        key={staff.id}
+                        staff={staff}
+                        onTransfer={onTransfer}
                     />
                 )) : (
                     <div className="text-center py-10 bg-muted/20 rounded-3xl border border-dashed text-muted-foreground text-xs italic">

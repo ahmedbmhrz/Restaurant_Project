@@ -50,8 +50,8 @@ export function BranchOperationsSheet({ data, staffList = [], allUsers = [], ref
                     <Building2 className="ml-2 h-4 w-4 opacity-0 transition-all duration-300 -translate-x-2 group-hover/btn:opacity-100 group-hover/btn:translate-x-0" />
                 </Button>
             </SheetTrigger>
-            <SheetContent className="overflow-y-auto w-full sm:max-w-xl border-l-0 shadow-2xl" style={{ minWidth: 'min(95vw, 580px)' }}>
-                <div className="mx-auto w-full pt-8 pb-12 space-y-10">
+            <SheetContent className="overflow-y-auto w-full sm:max-w-md border-l-0 shadow-2xl">
+                <div className="mx-auto w-full pt-6 pb-10 space-y-8 px-2">
                     <SheetHeader className="pb-6 border-b text-left">
                         <div className="flex items-center gap-3 mb-2">
                              <div className="bg-primary/10 p-2 rounded-xl">
