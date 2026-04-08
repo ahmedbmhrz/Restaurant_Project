@@ -1,4 +1,3 @@
-
 import {
     Card,
     CardContent,
@@ -8,29 +7,80 @@ import {
 } from "@/components/ui/card"
 import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-
-const data = [
-    { hour: "8am", customers: 20 },
-    { hour: "10am", customers: 35 },
-    { hour: "12pm", customers: 85 },
-    { hour: "2pm", customers: 60 },
-    { hour: "4pm", customers: 40 },
-    { hour: "6pm", customers: 95 },
-    { hour: "8pm", customers: 110 },
-    { hour: "10pm", customers: 45 },
-]
-
-const chartConfig = {
-    customers: {
-        label: "Expected Customers",
-        color: "#00ADB5",
-    },
-}
+import { useState, useEffect } from "react"
 
 export function BusyHours({ selectedBranch = "all" }) {
+    const [data, setData] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchBusyHours = async () => {
+            try {
+                setLoading(true);
+                const response = await fetch('/api/predict/busy-hours', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        branchId: selectedBranch
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch busy hours');
+                }
+                
+                const result = await response.json();
+                
+                // Transform hourly_forecast to chart format
+                const chartData = Object.entries(result.hourly_forecast || {}).map(([hour, customers]) => ({
+                    hour: `${hour}:00`,
+                    customers: Math.round(customers)
+                })).sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
+                
+                setData(chartData);
+                setError(null);
+            } catch (err) {
+                console.error('Busy hours error:', err);
+                setError(err.message);
+                // Fallback to mock data
+                setData([
+                    { hour: "8:00", customers: 20 },
+                    { hour: "10:00", customers: 35 },
+                    { hour: "12:00", customers: 85 },
+                    { hour: "14:00", customers: 60 },
+                    { hour: "16:00", customers: 40 },
+                    { hour: "18:00", customers: 95 },
+                    { hour: "20:00", customers: 110 },
+                    { hour: "22:00", customers: 45 },
+                ]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        
+        fetchBusyHours();
+    }, [selectedBranch]);
+
     const branchText = selectedBranch === "all"
         ? "Aggregate View"
         : `Branch ${selectedBranch}`;
+
+    if (loading) {
+        return (
+            <Card className="flex-1">
+                <CardHeader>
+                    <CardTitle>Predicted Busy Hours</CardTitle>
+                    <CardDescription>Loading predictions...</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="h-64 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    }
 
     return (
         <Card className="flex-1">
@@ -38,10 +88,16 @@ export function BusyHours({ selectedBranch = "all" }) {
                 <CardTitle>Predicted Busy Hours</CardTitle>
                 <CardDescription>
                     Density prediction for: <span className="font-semibold text-teal-600">{branchText}</span>
+                    {error && <span className="text-red-500 ml-2">(Using fallback data)</span>}
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <ChartContainer config={chartConfig} className="min-h-64 w-full">
+                <ChartContainer config={{
+                    customers: {
+                        label: "Expected Customers",
+                        color: "#00ADB5",
+                    },
+                }} className="min-h-64 w-full">
                     <BarChart data={data}>
                         <XAxis
                             dataKey="hour"
