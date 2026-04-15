@@ -5,12 +5,12 @@ import {
 } from "@/components/ui/native-select"
 
 const branches = [
-    { id: "all", name: "All Branches" },
-    { id: "A", name: "Branch A" },
-    { id: "B", name: "Branch B" },
-    { id: "C", name: "Branch C" },
-    { id: "D", name: "Branch D" },
-    { id: "E", name: "Branch E" },
+  { id: "all", name: "All Branches" },
+  { id: "11111111-1111-1111-1111-111111111111", name: "Branch A" },
+  { id: "22222222-2222-2222-2222-222222222222", name: "Branch B" },
+  { id: "cccc3333-3333-3333-3333-333333333333", name: "Branch C" },
+  { id: "aaaa1111-1111-1111-1111-111111111111", name: "Branch D" },
+  { id: "bbbb2222-2222-2222-2222-222222222222", name: "Branch E" },
 ]
 
 export function BranchSelector({ selected, onChange }) {
