@@ -89,6 +89,7 @@ def predict_busy_hours():
         
         return jsonify({
             "status": "success",
+            "historical_avg": {h: round(v) for h, v in hourly_avg.items()},
             "hourly_forecast": hourly_forecast,
             "peak_hours": peak_hours_formatted
         })

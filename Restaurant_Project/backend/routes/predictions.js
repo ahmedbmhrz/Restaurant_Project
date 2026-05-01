@@ -58,11 +58,29 @@ router.post('/sales-forecast', async (req, res) => {
         
         const forecast = await pythonRes.json();
         
-        // 3. Return formatted response
+        // 3. Prepare display data (Historical + Forecast)
+        const recentDates = sortedDates.slice(-7);
+        const recentActuals = salesValues.slice(-7);
+        
+        // Generate future dates starting from the day after the last actual date
+        const lastDateStr = recentDates[recentDates.length - 1] || new Date().toISOString().split('T')[0];
+        const lastDateObj = new Date(lastDateStr);
+        const futureDates = [];
+        
+        for (let i = 1; i <= forecast.days_predicted; i++) {
+            const nextDate = new Date(lastDateObj);
+            nextDate.setDate(lastDateObj.getDate() + i);
+            futureDates.push(nextDate.toISOString().split('T')[0].slice(5)); // Just MM-DD
+        }
+        
+        // 4. Return formatted response
         res.json({
             status: "success",
             branch: branchId,
+            historical: recentActuals,
+            historical_dates: recentDates.map(d => d.slice(5)), // Just MM-DD
             forecast: forecast.forecast,
+            forecast_dates: futureDates,
             days_predicted: forecast.days_predicted
         });
     } catch (err) {

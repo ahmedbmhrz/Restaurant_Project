@@ -32,11 +32,15 @@ export function BusyHours({ selectedBranch = "all" }) {
                 
                 const result = await response.json();
                 
-                // Transform hourly_forecast to chart format
-                const chartData = Object.entries(result.hourly_forecast || {}).map(([hour, customers]) => ({
-                    hour: `${hour}:00`,
-                    customers: Math.round(customers)
-                })).sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
+                // Transform hourly_forecast to chart format (with historical actuals)
+                const chartData = Object.keys(result.hourly_forecast || {}).map(hourStr => {
+                    const hour = parseInt(hourStr);
+                    return {
+                        hour: `${hour}:00`,
+                        actual: result.historical_avg?.[hourStr] || 0,
+                        predicted: Math.round(result.hourly_forecast[hourStr])
+                    };
+                }).sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
                 
                 setData(chartData);
                 setError(null);
@@ -45,14 +49,14 @@ export function BusyHours({ selectedBranch = "all" }) {
                 setError(err.message);
                 // Fallback to mock data
                 setData([
-                    { hour: "8:00", customers: 20 },
-                    { hour: "10:00", customers: 35 },
-                    { hour: "12:00", customers: 85 },
-                    { hour: "14:00", customers: 60 },
-                    { hour: "16:00", customers: 40 },
-                    { hour: "18:00", customers: 95 },
-                    { hour: "20:00", customers: 110 },
-                    { hour: "22:00", customers: 45 },
+                    { hour: "8:00", actual: 18, predicted: 20 },
+                    { hour: "10:00", actual: 32, predicted: 35 },
+                    { hour: "12:00", actual: 80, predicted: 85 },
+                    { hour: "14:00", actual: 55, predicted: 60 },
+                    { hour: "16:00", actual: 38, predicted: 40 },
+                    { hour: "18:00", actual: 90, predicted: 95 },
+                    { hour: "20:00", actual: 105, predicted: 110 },
+                    { hour: "22:00", actual: 40, predicted: 45 },
                 ]);
             } finally {
                 setLoading(false);
@@ -93,9 +97,13 @@ export function BusyHours({ selectedBranch = "all" }) {
             </CardHeader>
             <CardContent>
                 <ChartContainer config={{
-                    customers: {
-                        label: "Expected Customers",
-                        color: "#00ADB5",
+                    actual: {
+                        label: "Actual Average",
+                        color: "#0f172a", // Dark slate
+                    },
+                    predicted: {
+                        label: "Predicted Traffic",
+                        color: "#00ADB5", // Teal
                     },
                 }} className="min-h-64 w-full">
                     <BarChart data={data}>
@@ -108,17 +116,17 @@ export function BusyHours({ selectedBranch = "all" }) {
                         <YAxis hide />
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Bar
-                            dataKey="customers"
+                            dataKey="actual"
                             radius={[4, 4, 0, 0]}
-                            barSize={32}
-                        >
-                            {data.map((entry, index) => (
-                                <Cell
-                                    key={`cell-${index}`}
-                                    fill={entry.customers > 80 ? "var(--color-customers)" : "#e5e7eb"}
-                                />
-                            ))}
-                        </Bar>
+                            fill="var(--color-actual)"
+                            barSize={16}
+                        />
+                        <Bar
+                            dataKey="predicted"
+                            radius={[4, 4, 0, 0]}
+                            fill="var(--color-predicted)"
+                            barSize={16}
+                        />
                     </BarChart>
                 </ChartContainer>
                 <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">

@@ -33,26 +33,45 @@ export function SalesForecast({ selectedBranch = "all" }) {
                 
                 const result = await response.json();
                 
-                // Transform for chart
-                const chartData = result.forecast.map((val, idx) => ({
-                    month: `Day ${idx + 1}`,
-                    predicted: Math.round(val)
-                }));
+                const chartData = [];
+                
+                // 1. Add historical actuals
+                if (result.historical_dates) {
+                    result.historical_dates.forEach((date, i) => {
+                        chartData.push({
+                            date: date,
+                            actual: Math.round(result.historical[i]),
+                            // The last historical day also acts as the start of the predicted line
+                            predicted: i === result.historical_dates.length - 1 ? Math.round(result.historical[i]) : null
+                        });
+                    });
+                }
+                
+                // 2. Add future predictions
+                if (result.forecast_dates) {
+                    result.forecast_dates.forEach((date, i) => {
+                        chartData.push({
+                            date: date,
+                            actual: null,
+                            predicted: Math.round(result.forecast[i])
+                        });
+                    });
+                }
                 
                 setData(chartData);
                 setError(null);
             } catch (err) {
                 console.error('Prediction error:', err);
                 setError(err.message);
-                // Fallback to mock data
+                // Fallback to mock data with historical context
                 setData([
-                    { month: "Day 1", predicted: 4200 },
-                    { month: "Day 2", predicted: 4400 },
-                    { month: "Day 3", predicted: 4100 },
-                    { month: "Day 4", predicted: 4600 },
-                    { month: "Day 5", predicted: 4900 },
-                    { month: "Day 6", predicted: 5200 },
-                    { month: "Day 7", predicted: 4800 },
+                    { date: "04-25", actual: 3800, predicted: null },
+                    { date: "04-26", actual: 4200, predicted: null },
+                    { date: "04-27", actual: 4400, predicted: 4400 },
+                    { date: "04-28", actual: null, predicted: 4600 },
+                    { date: "04-29", actual: null, predicted: 4900 },
+                    { date: "04-30", actual: null, predicted: 5200 },
+                    { date: "05-01", actual: null, predicted: 4800 },
                 ]);
             } finally {
                 setLoading(false);
@@ -93,15 +112,19 @@ export function SalesForecast({ selectedBranch = "all" }) {
             </CardHeader>
             <CardContent>
                 <ChartContainer config={{
+                    actual: {
+                        label: "Actual Sales",
+                        color: "#00ADB5", // Teal for actuals (solid)
+                    },
                     predicted: {
                         label: "Predicted Sales",
-                        color: "#00ADB5",
+                        color: "#00ADB5", // Teal for predictions (dotted)
                     },
                 }} className="min-h-80 w-full">
                     <LineChart data={data}>
                         <CartesianGrid vertical={false} strokeDasharray="3 3" />
                         <XAxis
-                            dataKey="month"
+                            dataKey="date"
                             tickLine={false}
                             axisLine={false}
                             tickMargin={8}
@@ -114,11 +137,21 @@ export function SalesForecast({ selectedBranch = "all" }) {
                         <ChartTooltip content={<ChartTooltipContent />} />
                         <Line
                             type="monotone"
+                            dataKey="actual"
+                            stroke="var(--color-actual)"
+                            strokeWidth={3}
+                            dot={{ r: 4, fill: "var(--color-actual)" }}
+                            activeDot={{ r: 6 }}
+                            connectNulls
+                        />
+                        <Line
+                            type="monotone"
                             dataKey="predicted"
                             stroke="var(--color-predicted)"
                             strokeWidth={3}
                             strokeDasharray="5 5"
                             dot={{ r: 4, fill: "var(--color-predicted)" }}
+                            connectNulls
                         />
                     </LineChart>
                 </ChartContainer>
