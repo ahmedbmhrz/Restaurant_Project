@@ -2,8 +2,8 @@ import express from 'express';
 import supabase from '../supabaseClient.js';
 
 const router = express.Router();
-const PYTHON_URL = process.env.PYTHON_ML_URL || 'http://localhost:5001';
-const SERVER_URL = process.env.SERVER_URL || 'http://localhost:5000';
+const PYTHON_URL = process.env.PYTHON_ML_URL || 'http://127.0.0.1:5001';
+const SERVER_URL = process.env.SERVER_URL || 'http://127.0.0.1:5000';
 
 // ===== SALES FORECAST =====
 router.post('/sales-forecast', async (req, res) => {
@@ -62,27 +62,39 @@ router.post('/busy-hours', async (req, res) => {
     try {
         const { branchId } = req.body;
         
-        // 1. Fetch traffic data from Supabase
-        let query = supabase.from('traffic').select('hour, count, date');
+        // 1. Fetch order data from Supabase
+        let query = supabase.from('orders').select('created_at');
         if (branchId !== 'all') {
             query = query.eq('branch_id', branchId);
         }
         
-        const { data: trafficData, error } = await query
-            .order('date', { ascending: false })
-            .limit(200); // Recent traffic data
+        const { data: orderData, error } = await query
+            .order('created_at', { ascending: false })
+            .limit(500); // Recent order data
         
         if (error) throw error;
         
-        // 2. Group by hour
+        // 2. Group by hour based on order creation time
         const trafficByHour = {};
-        if (trafficData) {
-            trafficData.forEach(record => {
-                const hour = record.hour;
-                if (!trafficByHour[hour]) {
-                    trafficByHour[hour] = [];
-                }
-                trafficByHour[hour].push(record.count);
+        const dailyCounts = {};
+        
+        if (orderData) {
+            orderData.forEach(record => {
+                const dateObj = new Date(record.created_at);
+                const dateStr = dateObj.toISOString().split('T')[0];
+                const hour = dateObj.getHours();
+                
+                if (!dailyCounts[dateStr]) dailyCounts[dateStr] = {};
+                if (!dailyCounts[dateStr][hour]) dailyCounts[dateStr][hour] = 0;
+                dailyCounts[dateStr][hour]++;
+            });
+            
+            // Convert to the format Python expects: { hour: [count1, count2, ...] }
+            Object.values(dailyCounts).forEach(dayRecord => {
+                Object.entries(dayRecord).forEach(([hour, count]) => {
+                    if (!trafficByHour[hour]) trafficByHour[hour] = [];
+                    trafficByHour[hour].push(count);
+                });
             });
         }
         
