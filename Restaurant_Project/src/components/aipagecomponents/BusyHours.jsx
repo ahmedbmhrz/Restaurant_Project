@@ -18,7 +18,7 @@ export function BusyHours({ selectedBranch = "all" }) {
         const fetchBusyHours = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:5000/api/predict/busy-hours', {
+                const response = await fetch('/api/predict/busy-hours', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

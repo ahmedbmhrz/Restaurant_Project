@@ -18,7 +18,7 @@ export function SalesForecast({ selectedBranch = "all" }) {
         const fetchPredictions = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:5000/api/predict/sales-forecast', {
+                const response = await fetch('/api/predict/sales-forecast', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

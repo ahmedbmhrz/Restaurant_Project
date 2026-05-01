@@ -16,7 +16,7 @@ export function AIRecommendations({ selectedBranch = "all" }) {
         const fetchInsights = async () => {
             try {
                 setLoading(true);
-                const response = await fetch('http://localhost:5000/api/predict/insights', {
+                const response = await fetch('/api/predict/insights', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
