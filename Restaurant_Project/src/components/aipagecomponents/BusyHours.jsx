@@ -32,15 +32,15 @@ export function BusyHours({ selectedBranch = "all" }) {
                 
                 const result = await response.json();
                 
-                // Transform hourly_forecast to chart format (with historical actuals)
-                const chartData = Object.keys(result.hourly_forecast || {}).map(hourStr => {
-                    const hour = parseInt(hourStr);
-                    return {
+                // Transform hourly_forecast to chart format (ensure all business hours 8:00 to 23:00 are shown)
+                const chartData = [];
+                for (let hour = 8; hour <= 23; hour++) {
+                    chartData.push({
                         hour: `${hour}:00`,
-                        actual: result.historical_avg?.[hourStr] || 0,
-                        predicted: Math.round(result.hourly_forecast[hourStr])
-                    };
-                }).sort((a, b) => parseInt(a.hour) - parseInt(b.hour));
+                        actual: result.historical_avg?.[hour] || 0,
+                        predicted: result.hourly_forecast?.[hour] ? Math.round(result.hourly_forecast[hour]) : 0
+                    });
+                }
                 
                 setData(chartData);
                 setError(null);
