@@ -17,13 +17,30 @@ router.post('/sales-forecast', async (req, res) => {
         }
         
         const { data: salesData, error } = await query
-            .order('created_at', { ascending: true })
-            .limit(100); // Last 100 records for forecasting
+            .order('created_at', { ascending: false })
+            .limit(1500); // Fetch enough recent orders to get daily totals
         
         if (error) throw error;
         
-        // Extract sales values
-        const salesValues = salesData ? salesData.map(d => d.total_amount || 0) : [];
+        // Group sales by day
+        const dailySales = {};
+        if (salesData) {
+            salesData.forEach(order => {
+                const dateObj = new Date(order.created_at);
+                const dateStr = dateObj.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+                
+                if (!dailySales[dateStr]) {
+                    dailySales[dateStr] = 0;
+                }
+                dailySales[dateStr] += (order.total_amount || 0);
+            });
+        }
+        
+        // Sort dates chronologically (oldest to newest)
+        const sortedDates = Object.keys(dailySales).sort();
+        
+        // Extract the daily totals as an array for the AI model
+        const salesValues = sortedDates.map(date => dailySales[date]);
         
         // 2. Call Python ML service
         const pythonRes = await fetch(`${PYTHON_URL}/api/predict/sales`, {
