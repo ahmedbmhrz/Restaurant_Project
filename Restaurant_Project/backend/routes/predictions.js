@@ -189,7 +189,9 @@ router.post('/insights', async (req, res) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                historical_sales: forecast.historical || [],
                 sales_forecast: forecast.forecast || [],
+                historical_traffic: busyHours.historical_avg || {},
                 peak_hours: busyHours.peak_hours || []
             })
         });

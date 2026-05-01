@@ -103,46 +103,99 @@ def predict_busy_hours():
 @app.route("/api/predict/insights", methods=['POST'])
 def generate_insights():
     """
-    Receives: sales_forecast (list), peak_hours (list)
-    Returns: actionable insights based on predictions
+    Receives: historical_sales, sales_forecast, historical_traffic, peak_hours
+    Returns: actionable structured JSON insights based on predictions
     """
     try:
         data = request.get_json()
+        historical_sales = data.get('historical_sales', [])
         forecast = data.get('sales_forecast', [])
+        historical_traffic = data.get('historical_traffic', {})
         peak_hours = data.get('peak_hours', [])
         
         insights = []
         
-        # Revenue insights
+        # 1. Revenue Insight
         if forecast:
             avg_forecast = np.mean(forecast)
-            trend = "📈 Upward" if len(forecast) > 1 and forecast[-1] > forecast[0] else "📉 Downward"
+            avg_hist = np.mean(historical_sales) if historical_sales else avg_forecast
             
-            if avg_forecast > 5000:
-                insights.append("💰 Strong revenue expected - consider extended shifts")
-            elif avg_forecast < 2000:
-                insights.append("⚠️ Low forecast - optimize staffing and inventory")
+            # Calculate % difference
+            diff_pct = ((avg_forecast - avg_hist) / avg_hist * 100) if avg_hist > 0 else 0
+            
+            if diff_pct > 15:
+                insights.append({
+                    "type": "revenue",
+                    "severity": "positive",
+                    "title": "Revenue Surge Expected",
+                    "description": f"Predicted average daily revenue is ${avg_forecast:.0f}, which is {diff_pct:.0f}% higher than your recent historical average.",
+                    "action": "Ensure high-margin items are fully stocked.",
+                    "trend": f"▲ +{diff_pct:.0f}% vs Avg"
+                })
+            elif diff_pct < -15:
+                insights.append({
+                    "type": "revenue",
+                    "severity": "negative",
+                    "title": "Revenue Drop Predicted",
+                    "description": f"Predicted average daily revenue is dropping to ${avg_forecast:.0f} (a {abs(diff_pct):.0f}% decrease).",
+                    "action": "Consider running a targeted promotion.",
+                    "trend": f"▼ {diff_pct:.0f}% vs Avg"
+                })
             else:
-                insights.append("📊 Moderate revenue expected - maintain current operations")
-            
-            insights.append(f"📈 Trend: {trend} (Avg: ${avg_forecast:.0f})")
+                insights.append({
+                    "type": "revenue",
+                    "severity": "neutral",
+                    "title": "Stable Revenue Forecast",
+                    "description": f"Revenue is expected to remain steady at an average of ${avg_forecast:.0f} per day.",
+                    "action": "Maintain current operational levels.",
+                    "trend": "▶ Stable"
+                })
         
-        # Traffic insights
+        # 2. Traffic/Staffing Insight
         if peak_hours and len(peak_hours) > 0:
             top_peak = peak_hours[0]
-            insights.append(f"📊 Prepare for peak traffic at {top_peak['hour']}:00 ({top_peak['expected_traffic']} expected)")
+            peak_h = top_peak['hour']
+            expected = top_peak['expected_traffic']
+            hist_avg = historical_traffic.get(str(peak_h), expected)
             
-            if len(peak_hours) > 1:
-                insights.append(f"🎯 Secondary peak at {peak_hours[1]['hour']}:00")
+            diff_pct = ((expected - hist_avg) / hist_avg * 100) if hist_avg > 0 else 0
+            
+            if diff_pct > 20:
+                insights.append({
+                    "type": "staffing",
+                    "severity": "warning",
+                    "title": "Unusual Traffic Spike",
+                    "description": f"Prepare for a massive rush at {peak_h}:00. Expected traffic ({expected}) is {diff_pct:.0f}% higher than normal.",
+                    "action": "Call in extra servers for this shift.",
+                    "trend": f"▲ +{diff_pct:.0f}% Spike"
+                })
+            else:
+                insights.append({
+                    "type": "traffic",
+                    "severity": "neutral",
+                    "title": "Daily Peak Hours",
+                    "description": f"Your busiest time today will be around {peak_h}:00 with approximately {expected} expected customers.",
+                    "action": "Ensure all stations are prepped by this time.",
+                    "trend": f"Peak: {peak_h}:00"
+                })
         
-        # General recommendations
-        insights.append("🔄 Monitor real-time data and adjust staffing accordingly")
+        # 3. Inventory/Stock Insight
+        if forecast:
+            max_forecast_day = max(forecast)
+            insights.append({
+                "type": "inventory",
+                "severity": "neutral",
+                "title": "Stock Optimization",
+                "description": f"Your highest revenue day this week is projected to hit ${max_forecast_day:.0f}.",
+                "action": "Review inventory for top-selling items.",
+                "trend": "Action Required"
+            })
         
         return jsonify({
             "status": "success",
             "insights": insights,
             "average_forecast": round(np.mean(forecast), 2) if forecast else 0,
-            "trend": trend if 'trend' in locals() else "📊 Stable"
+            "trend": "📈 Upward" if forecast and len(forecast) > 1 and forecast[-1] > forecast[0] else "📉 Downward"
         })
     except Exception as e:
         return jsonify({"error": str(e), "status": "error"}), 500

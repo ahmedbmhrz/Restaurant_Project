@@ -30,33 +30,41 @@ export function AIRecommendations({ selectedBranch = "all" }) {
                 
                 const result = await response.json();
                 
-                // Transform insights into recommendation format
+                // Transform structured insights
                 const transformedRecommendations = result.insights.map((insight, index) => {
-                    // Map insights to icons and colors based on content
-                    let icon, color;
-                    if (insight.includes('traffic') || insight.includes('peak')) {
-                        icon = <Users className="h-5 w-5 text-teal-600" />;
-                        color = "bg-teal-50";
-                    } else if (insight.includes('revenue') || insight.includes('sales')) {
-                        icon = <DollarSign className="h-5 w-5 text-green-600" />;
-                        color = "bg-green-50";
-                    } else if (insight.includes('staff') || insight.includes('server')) {
-                        icon = <TrendingUp className="h-5 w-5 text-blue-600" />;
-                        color = "bg-blue-50";
-                    } else if (insight.includes('inventory') || insight.includes('order')) {
-                        icon = <ShoppingBag className="h-5 w-5 text-purple-600" />;
-                        color = "bg-purple-50";
+                    let icon, color, textColor;
+                    
+                    // Assign colors based on severity
+                    if (insight.severity === 'positive') {
+                        color = "bg-emerald-50 border-emerald-100";
+                        textColor = "text-emerald-700";
+                    } else if (insight.severity === 'negative') {
+                        color = "bg-rose-50 border-rose-100";
+                        textColor = "text-rose-700";
+                    } else if (insight.severity === 'warning') {
+                        color = "bg-amber-50 border-amber-100";
+                        textColor = "text-amber-700";
                     } else {
-                        icon = <AlertTriangle className="h-5 w-5 text-orange-600" />;
-                        color = "bg-orange-50";
+                        color = "bg-slate-50 border-slate-100";
+                        textColor = "text-slate-700";
+                    }
+                    
+                    // Assign icon based on type
+                    if (insight.type === 'revenue') {
+                        icon = <DollarSign className={`h-5 w-5 ${textColor}`} />;
+                    } else if (insight.type === 'staffing' || insight.type === 'traffic') {
+                        icon = <Users className={`h-5 w-5 ${textColor}`} />;
+                    } else if (insight.type === 'inventory') {
+                        icon = <ShoppingBag className={`h-5 w-5 ${textColor}`} />;
+                    } else {
+                        icon = <Sparkles className={`h-5 w-5 ${textColor}`} />;
                     }
                     
                     return {
+                        ...insight,
                         icon,
-                        title: insight.split(' ').slice(0, 2).join(' ') || 'AI Insight',
-                        description: insight,
-                        trend: result.trend || 'AI Generated',
-                        color
+                        color,
+                        textColor
                     };
                 });
                 
@@ -65,28 +73,25 @@ export function AIRecommendations({ selectedBranch = "all" }) {
             } catch (err) {
                 console.error('Insights error:', err);
                 setError(err.message);
-                // Fallback to mock data
+                // Fallback to mock structured data
                 setRecommendations([
                     {
-                        icon: <Users className="h-5 w-5 text-teal-600" />,
-                        title: "Staff Optimization",
-                        description: "AI predicts 30% higher traffic this Friday evening. Consider adding 2 more servers.",
-                        trend: "+30% traffic",
-                        color: "bg-teal-50"
+                        icon: <Users className="h-5 w-5 text-amber-700" />,
+                        title: "Unusual Traffic Spike",
+                        description: "Expected traffic at 18:00 is 120% higher than your historical average.",
+                        action: "Review Shift Schedule",
+                        trend: "▲ +120% Spike",
+                        color: "bg-amber-50 border-amber-100",
+                        textColor: "text-amber-700"
                     },
                     {
-                        icon: <ShoppingBag className="h-5 w-5 text-blue-600" />,
-                        title: "Inventory Alert",
-                        description: "Predicted demand for 'Signature Pizza' is rising. Order 15% more fresh dough ingredients.",
-                        trend: "+15% demand",
-                        color: "bg-blue-50"
-                    },
-                    {
-                        icon: <TrendingUp className="h-5 w-5 text-purple-600" />,
-                        title: "Promo Opportunity",
-                        description: "Tuesday lunch hours are projected to be slow. Launch a 'Happy Hour' 2-for-1 offer.",
-                        trend: "Revenue gap detected",
-                        color: "bg-purple-50"
+                        icon: <ShoppingBag className="h-5 w-5 text-slate-700" />,
+                        title: "Stock Optimization",
+                        description: "Your highest revenue day this week is projected to hit $5,200.",
+                        action: "Check Inventory Levels",
+                        trend: "Action Required",
+                        color: "bg-slate-50 border-slate-100",
+                        textColor: "text-slate-700"
                     }
                 ]);
             } finally {
@@ -117,26 +122,34 @@ export function AIRecommendations({ selectedBranch = "all" }) {
                 <Sparkles className="h-6 w-6 text-teal-500 fill-teal-500/20" />
                 <h2 className="text-xl font-bold text-slate-800">
                     {selectedBranch === "all" ? "Global Insights" : `Insights for Branch ${selectedBranch}`}
-                    {error && <span className="text-red-500 text-sm ml-2">(Using fallback data)</span>}
+                    {error && <span className="text-red-500 text-sm ml-2">(Fallback: {error})</span>}
                 </h2>
             </div>
 
             <div className="grid gap-4">
                 {recommendations.map((rec, index) => (
-                    <Card key={index} className="overflow-hidden border-teal-100/50 shadow-sm hover:shadow-md transition-shadow">
-                        <CardHeader className={`${rec.color} py-3`}>
+                    <Card key={index} className={`overflow-hidden border shadow-sm hover:shadow-md transition-shadow ${rec.color}`}>
+                        <CardHeader className="py-3 pb-2">
                             <div className="flex items-center gap-3">
                                 {rec.icon}
-                                <CardTitle className="text-sm font-semibold">{rec.title}</CardTitle>
+                                <CardTitle className={`text-sm font-bold ${rec.textColor}`}>{rec.title}</CardTitle>
                             </div>
                         </CardHeader>
-                        <CardContent className="pt-4">
-                            <p className="text-sm text-slate-600 leading-relaxed mb-2">
+                        <CardContent className="pt-0">
+                            <p className="text-sm text-slate-700 leading-relaxed mb-3 mt-1">
                                 {rec.description}
                             </p>
-                            <span className="text-[10px] font-bold uppercase tracking-wider text-teal-600 bg-teal-50 px-2 py-1 rounded">
-                                {rec.trend}
-                            </span>
+                            
+                            <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-200/60">
+                                <span className={`text-xs font-bold px-2 py-1 rounded bg-white/60 ${rec.textColor}`}>
+                                    {rec.trend}
+                                </span>
+                                {rec.action && (
+                                    <button className={`text-xs font-semibold flex items-center gap-1 hover:underline ${rec.textColor}`}>
+                                        {rec.action}
+                                    </button>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
                 ))}
