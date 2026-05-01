@@ -38,9 +38,10 @@ export function BusyHours({ selectedBranch = "all" }) {
                 const chartData = [];
                 if (timeframe === 'dayOfWeek') {
                     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    const currentDayIndex = new Date().getDay();
                     for (let i = 0; i <= 6; i++) {
                         chartData.push({
-                            label: days[i],
+                            label: i === currentDayIndex ? `${days[i]} (Today)` : days[i],
                             actual: result.historical_avg?.[i] || 0,
                             predicted: result.hourly_forecast?.[i] ? Math.round(result.hourly_forecast[i]) : 0
                         });
