@@ -13,6 +13,7 @@ export function BusyHours({ selectedBranch = "all" }) {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [timeframe, setTimeframe] = useState('hour');
 
     useEffect(() => {
         const fetchBusyHours = async () => {
@@ -22,7 +23,8 @@ export function BusyHours({ selectedBranch = "all" }) {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        branchId: selectedBranch
+                        branchId: selectedBranch,
+                        timeframe: timeframe
                     })
                 });
                 
@@ -32,14 +34,25 @@ export function BusyHours({ selectedBranch = "all" }) {
                 
                 const result = await response.json();
                 
-                // Transform hourly_forecast to chart format (ensure all business hours 8:00 to 23:00 are shown)
+                // Transform to chart format
                 const chartData = [];
-                for (let hour = 8; hour <= 23; hour++) {
-                    chartData.push({
-                        hour: `${hour}:00`,
-                        actual: result.historical_avg?.[hour] || 0,
-                        predicted: result.hourly_forecast?.[hour] ? Math.round(result.hourly_forecast[hour]) : 0
-                    });
+                if (timeframe === 'dayOfWeek') {
+                    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                    for (let i = 0; i <= 6; i++) {
+                        chartData.push({
+                            label: days[i],
+                            actual: result.historical_avg?.[i] || 0,
+                            predicted: result.hourly_forecast?.[i] ? Math.round(result.hourly_forecast[i]) : 0
+                        });
+                    }
+                } else {
+                    for (let hour = 8; hour <= 23; hour++) {
+                        chartData.push({
+                            label: `${hour}:00`,
+                            actual: result.historical_avg?.[hour] || 0,
+                            predicted: result.hourly_forecast?.[hour] ? Math.round(result.hourly_forecast[hour]) : 0
+                        });
+                    }
                 }
                 
                 setData(chartData);
@@ -64,7 +77,7 @@ export function BusyHours({ selectedBranch = "all" }) {
         };
         
         fetchBusyHours();
-    }, [selectedBranch]);
+    }, [selectedBranch, timeframe]);
 
     const branchText = selectedBranch === "all"
         ? "Aggregate View"
@@ -88,12 +101,22 @@ export function BusyHours({ selectedBranch = "all" }) {
 
     return (
         <Card className="flex-1">
-            <CardHeader>
-                <CardTitle>Predicted Busy Hours</CardTitle>
-                <CardDescription>
-                    Density prediction for: <span className="font-semibold text-teal-600">{branchText}</span>
-                    {error && <span className="text-red-500 ml-2">(Using fallback data)</span>}
-                </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                    <CardTitle>Predicted Busy {timeframe === 'hour' ? 'Hours' : 'Days'}</CardTitle>
+                    <CardDescription>
+                        Density prediction for: <span className="font-semibold text-teal-600">{branchText}</span>
+                        {error && <span className="text-red-500 ml-2">(Using fallback data)</span>}
+                    </CardDescription>
+                </div>
+                <select 
+                    value={timeframe} 
+                    onChange={(e) => setTimeframe(e.target.value)}
+                    className="border border-slate-200 rounded px-3 py-1 bg-white text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                >
+                    <option value="hour">By Hour</option>
+                    <option value="dayOfWeek">By Day of Week</option>
+                </select>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={{
@@ -108,7 +131,7 @@ export function BusyHours({ selectedBranch = "all" }) {
                 }} className="min-h-64 w-full">
                     <BarChart data={data}>
                         <XAxis
-                            dataKey="hour"
+                            dataKey="label"
                             tickLine={false}
                             axisLine={false}
                             tickMargin={10}

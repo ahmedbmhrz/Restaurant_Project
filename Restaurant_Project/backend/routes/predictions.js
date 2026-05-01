@@ -8,7 +8,13 @@ const SERVER_URL = process.env.SERVER_URL || 'http://127.0.0.1:5000';
 // ===== SALES FORECAST =====
 router.post('/sales-forecast', async (req, res) => {
     try {
-        const { branchId, daysToPredict = 7 } = req.body;
+        const { branchId, timeframe = 'day' } = req.body;
+        
+        // Set how many steps to predict based on timeframe
+        let stepsToPredict = 7;
+        if (timeframe === 'week') stepsToPredict = 4;
+        else if (timeframe === 'month') stepsToPredict = 6;
+        else if (timeframe === 'year') stepsToPredict = 3;
         
         // 1. Fetch sales data from Supabase
         let query = supabase.from('orders').select('total_amount, created_at');
@@ -18,29 +24,40 @@ router.post('/sales-forecast', async (req, res) => {
         
         const { data: salesData, error } = await query
             .order('created_at', { ascending: false })
-            .limit(1500); // Fetch enough recent orders to get daily totals
+            .limit(10000); // Fetch many recent orders to get robust grouping
         
         if (error) throw error;
         
-        // Group sales by day
-        const dailySales = {};
+        // Group sales by timeframe
+        const groupedSales = {};
         if (salesData) {
             salesData.forEach(order => {
                 const dateObj = new Date(order.created_at);
-                const dateStr = dateObj.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+                let dateKey;
                 
-                if (!dailySales[dateStr]) {
-                    dailySales[dateStr] = 0;
+                if (timeframe === 'year') {
+                    dateKey = dateObj.getFullYear().toString();
+                } else if (timeframe === 'month') {
+                    dateKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+                } else if (timeframe === 'week') {
+                    const firstDayOfYear = new Date(dateObj.getFullYear(), 0, 1);
+                    const pastDaysOfYear = (dateObj - firstDayOfYear) / 86400000;
+                    const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+                    dateKey = `${dateObj.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+                } else {
+                    dateKey = dateObj.toISOString().split('T')[0];
                 }
-                dailySales[dateStr] += (order.total_amount || 0);
+                
+                if (!groupedSales[dateKey]) {
+                    groupedSales[dateKey] = 0;
+                }
+                groupedSales[dateKey] += (order.total_amount || 0);
             });
         }
         
-        // Sort dates chronologically (oldest to newest)
-        const sortedDates = Object.keys(dailySales).sort();
-        
-        // Extract the daily totals as an array for the AI model
-        const salesValues = sortedDates.map(date => dailySales[date]);
+        // Sort keys chronologically
+        const sortedKeys = Object.keys(groupedSales).sort();
+        const salesValues = sortedKeys.map(key => groupedSales[key]);
         
         // 2. Call Python ML service
         const pythonRes = await fetch(`${PYTHON_URL}/api/predict/sales`, {
@@ -48,7 +65,7 @@ router.post('/sales-forecast', async (req, res) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 sales_values: salesValues,
-                days_to_predict: daysToPredict
+                days_to_predict: stepsToPredict // The python script treats this as 'steps'
             })
         });
         
@@ -58,19 +75,48 @@ router.post('/sales-forecast', async (req, res) => {
         
         const forecast = await pythonRes.json();
         
-        // 3. Prepare display data (Historical + Forecast)
-        const recentDates = sortedDates.slice(-7);
-        const recentActuals = salesValues.slice(-7);
+        // 3. Prepare display data
+        const recentCount = timeframe === 'year' ? 3 : 7;
+        const recentKeys = sortedKeys.slice(-recentCount);
+        const recentActuals = salesValues.slice(-recentCount);
         
-        // Generate future dates starting from the day after the last actual date
-        const lastDateStr = recentDates[recentDates.length - 1] || new Date().toISOString().split('T')[0];
-        const lastDateObj = new Date(lastDateStr);
+        const lastDateStr = recentKeys[recentKeys.length - 1] || new Date().toISOString().split('T')[0];
         const futureDates = [];
         
-        for (let i = 1; i <= forecast.days_predicted; i++) {
-            const nextDate = new Date(lastDateObj);
-            nextDate.setDate(lastDateObj.getDate() + i);
-            futureDates.push(nextDate.toISOString().split('T')[0].slice(5)); // Just MM-DD
+        // Generate future keys
+        if (timeframe === 'year') {
+            const lastYear = parseInt(lastDateStr) || new Date().getFullYear();
+            for (let i = 1; i <= forecast.days_predicted; i++) {
+                futureDates.push((lastYear + i).toString());
+            }
+        } else if (timeframe === 'month') {
+            let [y, m] = lastDateStr.split('-').map(Number);
+            for (let i = 1; i <= forecast.days_predicted; i++) {
+                m++;
+                if (m > 12) { m = 1; y++; }
+                futureDates.push(`${y}-${String(m).padStart(2, '0')}`);
+            }
+        } else if (timeframe === 'week') {
+            let [y, w] = lastDateStr.split('-W');
+            w = parseInt(w) || 1;
+            y = parseInt(y) || new Date().getFullYear();
+            for (let i = 1; i <= forecast.days_predicted; i++) {
+                w++;
+                if (w > 52) { w = 1; y++; }
+                futureDates.push(`${y}-W${String(w).padStart(2, '0')}`);
+            }
+        } else {
+            const lastDateObj = new Date(lastDateStr);
+            for (let i = 1; i <= forecast.days_predicted; i++) {
+                const nextDate = new Date(lastDateObj);
+                nextDate.setDate(lastDateObj.getDate() + i);
+                futureDates.push(nextDate.toISOString().split('T')[0].slice(5)); // MM-DD
+            }
+        }
+        
+        let historicalDatesFormatted = recentKeys;
+        if (timeframe === 'day') {
+            historicalDatesFormatted = recentKeys.map(d => d.slice(5)); // MM-DD
         }
         
         // 4. Return formatted response
@@ -78,7 +124,7 @@ router.post('/sales-forecast', async (req, res) => {
             status: "success",
             branch: branchId,
             historical: recentActuals,
-            historical_dates: recentDates.map(d => d.slice(5)), // Just MM-DD
+            historical_dates: historicalDatesFormatted,
             forecast: forecast.forecast,
             forecast_dates: futureDates,
             days_predicted: forecast.days_predicted
@@ -95,7 +141,7 @@ router.post('/sales-forecast', async (req, res) => {
 // ===== BUSY HOURS PREDICTION =====
 router.post('/busy-hours', async (req, res) => {
     try {
-        const { branchId } = req.body;
+        const { branchId, timeframe = 'hour' } = req.body;
         
         // 1. Fetch order data from Supabase
         let query = supabase.from('orders').select('created_at');
@@ -105,30 +151,38 @@ router.post('/busy-hours', async (req, res) => {
         
         const { data: orderData, error } = await query
             .order('created_at', { ascending: false })
-            .limit(500); // Recent order data
+            .limit(1500); // Increased limit to ensure we have enough data for a full week profile
         
         if (error) throw error;
         
-        // 2. Group by hour based on order creation time
-        const trafficByHour = {};
-        const dailyCounts = {};
+        // 2. Group by hour or day of week based on order creation time
+        const trafficByPeriod = {};
+        const dailyCounts = {}; // Used to track traffic per individual day to calculate averages
         
         if (orderData) {
             orderData.forEach(record => {
                 const dateObj = new Date(record.created_at);
                 const dateStr = dateObj.toISOString().split('T')[0];
-                const hour = dateObj.getHours();
+                
+                let periodKey;
+                if (timeframe === 'dayOfWeek') {
+                    // Group by Day of Week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+                    periodKey = dateObj.getDay(); 
+                } else {
+                    // Group by Hour of Day (0 - 23)
+                    periodKey = dateObj.getHours(); 
+                }
                 
                 if (!dailyCounts[dateStr]) dailyCounts[dateStr] = {};
-                if (!dailyCounts[dateStr][hour]) dailyCounts[dateStr][hour] = 0;
-                dailyCounts[dateStr][hour]++;
+                if (!dailyCounts[dateStr][periodKey]) dailyCounts[dateStr][periodKey] = 0;
+                dailyCounts[dateStr][periodKey]++;
             });
             
-            // Convert to the format Python expects: { hour: [count1, count2, ...] }
+            // Convert to the format Python expects: { period: [count1, count2, ...] }
             Object.values(dailyCounts).forEach(dayRecord => {
-                Object.entries(dayRecord).forEach(([hour, count]) => {
-                    if (!trafficByHour[hour]) trafficByHour[hour] = [];
-                    trafficByHour[hour].push(count);
+                Object.entries(dayRecord).forEach(([period, count]) => {
+                    if (!trafficByPeriod[period]) trafficByPeriod[period] = [];
+                    trafficByPeriod[period].push(count);
                 });
             });
         }
@@ -138,7 +192,7 @@ router.post('/busy-hours', async (req, res) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                traffic_by_hour: trafficByHour
+                traffic_by_hour: trafficByPeriod // Python script handles the keys generically
             })
         });
         

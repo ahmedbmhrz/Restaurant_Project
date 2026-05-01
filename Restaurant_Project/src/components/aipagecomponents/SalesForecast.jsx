@@ -8,11 +8,13 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
 import { useState, useEffect } from "react"
+import { TrendingUp } from "lucide-react"
 
 export function SalesForecast({ selectedBranch = "all" }) {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [timeframe, setTimeframe] = useState('day');
 
     useEffect(() => {
         const fetchPredictions = async () => {
@@ -23,7 +25,7 @@ export function SalesForecast({ selectedBranch = "all" }) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         branchId: selectedBranch,
-                        daysToPredict: 7
+                        timeframe: timeframe
                     })
                 });
                 
@@ -79,11 +81,7 @@ export function SalesForecast({ selectedBranch = "all" }) {
         };
         
         fetchPredictions();
-    }, [selectedBranch]);
-
-    const branchText = selectedBranch === "all"
-        ? "All Branches"
-        : `Branch ${selectedBranch}`;
+    }, [selectedBranch, timeframe]);
 
     if (loading) {
         return (
@@ -102,13 +100,27 @@ export function SalesForecast({ selectedBranch = "all" }) {
     }
 
     return (
-        <Card className="flex-1">
-            <CardHeader>
-                <CardTitle>Sales Forecast</CardTitle>
-                <CardDescription>
-                    Revenue performance for: <span className="font-semibold text-teal-600">{branchText}</span>
-                    {error && <span className="text-red-500 ml-2">(Using fallback data)</span>}
-                </CardDescription>
+        <Card className="border shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <div>
+                    <CardTitle className="flex items-center gap-2">
+                        <TrendingUp className="h-5 w-5 text-teal-600" />
+                        Sales Forecast
+                    </CardTitle>
+                    <CardDescription>
+                        Revenue performance for: <span className="font-semibold text-teal-700">{selectedBranch === "all" ? "All Branches" : `Branch ${selectedBranch}`}</span>
+                    </CardDescription>
+                </div>
+                <select 
+                    value={timeframe} 
+                    onChange={(e) => setTimeframe(e.target.value)}
+                    className="border border-slate-200 rounded px-3 py-1 bg-white text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                >
+                    <option value="day">Daily</option>
+                    <option value="week">Weekly</option>
+                    <option value="month">Monthly</option>
+                    <option value="year">Yearly</option>
+                </select>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={{
