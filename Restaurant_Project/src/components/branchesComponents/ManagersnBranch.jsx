@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { ManagerCard } from "./ManagerCard"
 import { ManagerProfileModal } from "./ManagerProfileModal"
 
@@ -15,20 +14,18 @@ export function ManagersnBranch({ managers = [], onSelectManager, selectedBranch
 
     return (
         <div className="h-full flex flex-col overflow-hidden">
-            <h2 className="text-xl font-bold mb-4 flex-none">Branch Managers</h2>
-            <ScrollArea className="flex-1 min-h-0 rounded-md border p-4">
-                <div className="flex flex-col gap-4">
-                    {managers.map((manager, index) => (
-                        <ManagerCard 
-                            key={index} 
-                            {...manager} 
-                            onClick={() => onSelectManager && onSelectManager(manager.branch_id)}
-                            onProfileClick={() => setSelectedManager(manager)}
-                            isSelected={manager.branch_id === selectedBranchId}
-                        />
-                    ))}
-                </div>
-            </ScrollArea>
+            <h2 className="text-xl font-bold text-slate-800 mb-6 flex-none px-2">Branch Managers</h2>
+            <div className="flex-1 min-h-0 overflow-y-auto px-2 space-y-4 pb-4 scrollbar-thin scrollbar-thumb-slate-200">
+                {managers.map((manager, index) => (
+                    <ManagerCard 
+                        key={index} 
+                        {...manager} 
+                        onClick={() => onSelectManager && onSelectManager(manager.branch_id)}
+                        onProfileClick={() => setSelectedManager(manager)}
+                        isSelected={manager.branch_id === selectedBranchId}
+                    />
+                ))}
+            </div>
 
             <ManagerProfileModal 
                 manager={selectedManager}

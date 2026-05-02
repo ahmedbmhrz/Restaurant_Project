@@ -1,7 +1,6 @@
 import { Navbar } from "@/components/Navbar"
 import { ManagersnBranch } from "../components/branchesComponents/ManagersnBranch"
 import { BranchTabs } from "../components/branchesComponents/BranchTabs"
-import { Card } from "@/components/ui/card"
 import { useState, useEffect } from "react"
 
 function Branches() {
@@ -44,7 +43,7 @@ function Branches() {
 
     if (!pageData) {
         return (
-            <div className="h-screen flex flex-col bg-muted/90 overflow-hidden">
+            <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
                 <Navbar />
                 <main className="flex-1 p-6 md:p-10 flex items-center justify-center">
                     <div className="flex flex-col items-center gap-6 animate-pulse">
@@ -57,28 +56,35 @@ function Branches() {
     }
 
     return (
-        <div className="h-screen flex flex-col bg-muted/90 overflow-hidden">
+        <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
             <Navbar />
-            <main className="flex-1 p-6 md:p-10 flex flex-col gap-6 h-[calc(100vh-64px)] overflow-hidden">
-                <Card className="flex-1 flex flex-col min-h-0 overflow-hidden border-none shadow-2xl bg-background/60 backdrop-blur-2xl rounded-3xl p-8 gap-8">
-                    <div className="flex-none border-b pb-6">
-                        <h2 className="text-4xl font-extrabold tracking-tight text-primary">Branch Insights</h2>
-                    </div>
-                    <div className="flex-1 flex flex-col lg:flex-row gap-8 min-h-0 overflow-hidden">
+            <main className="flex-1 p-4 md:p-8 flex flex-col gap-6 h-[calc(100vh-64px)] overflow-hidden max-w-[1600px] mx-auto w-full">
+                
+                {/* Clean Header */}
+                <div className="flex-none pb-2 pl-2">
+                    <h2 className="text-4xl font-extrabold tracking-tight text-slate-800">Branch Insights</h2>
+                    <p className="text-sm font-medium text-slate-500 mt-1">Manage and monitor all regional locations</p>
+                </div>
+
+                <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0 overflow-hidden w-full">
+                    {/* Left Side: Branch Tabs (Takes up more space) */}
+                    <div className="flex-[3] min-w-0 min-h-0 h-full">
                         <BranchTabs 
                             isFetching={isFetching} 
                             pageData={pageData} 
                             fetchPageData={fetchPageData} 
                         />
-                        <div className="flex-1 lg:max-w-md h-full min-h-0 overflow-hidden bg-gray-100 backdrop-blur-md rounded-2xl shadow-sm p-8 border border-white/20">
-                            <ManagersnBranch
-                                managers={pageData.managers}
-                                selectedBranchId={pageData.targetBranchId}
-                                onSelectManager={setSelectedBranchId}
-                            />
-                        </div>
                     </div>
-                </Card>
+                    
+                    {/* Right Side: Managers Panel (Glassmorphism wrapper) */}
+                    <div className="flex-1 lg:max-w-md h-full min-h-0 overflow-hidden bg-white/40 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl p-6">
+                        <ManagersnBranch
+                            managers={pageData.managers}
+                            selectedBranchId={pageData.targetBranchId}
+                            onSelectManager={setSelectedBranchId}
+                        />
+                    </div>
+                </div>
             </main>
         </div>
     )
