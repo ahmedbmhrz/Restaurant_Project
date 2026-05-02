@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
-import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react"
+import { Link, useNavigate } from "react-router-dom"
+import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -8,16 +8,41 @@ import { Label } from "@/components/ui/label"
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
   const handleSubmit = (e) => {
     e.preventDefault()
     setIsLoading(true)
-    // Simulate login
-    setTimeout(() => setIsLoading(false), 1500)
+    setError(null)
+    
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+
+    // Simulate network request
+    setTimeout(() => {
+      setIsLoading(false)
+      
+      // DUMMY AUTHENTICATION LOGIC
+      if (email === "admin@nexus.com" && password === "password123") {
+        // Success! Redirect to the dashboard
+        navigate("/")
+      } else {
+        // Fail! Show error message
+        setError("Invalid email or password. (Hint: use admin@nexus.com / password123)")
+      }
+    }, 1500)
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium animate-in fade-in zoom-in-95 duration-300">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <p>{error}</p>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="email" className="text-sm font-bold text-slate-700 ml-1">Email Address</Label>
         <div className="relative group">
@@ -25,7 +50,7 @@ export function LoginForm() {
           <Input 
             id="email" 
             type="email" 
-            placeholder="name@example.com" 
+            placeholder="admin@nexus.com" 
             required 
             className="pl-10 h-12 bg-slate-50/50 border-slate-200 focus-visible:ring-primary focus-visible:bg-white transition-all rounded-xl font-medium"
           />
