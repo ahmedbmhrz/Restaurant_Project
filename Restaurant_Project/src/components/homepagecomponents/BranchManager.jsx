@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Users, ChevronRight } from "lucide-react"
 
@@ -39,8 +38,8 @@ export function BranchManager() {
             </div>
 
             {/* List */}
-            <ScrollArea className="flex-1 p-4">
-                <div className="flex flex-col gap-3 pr-4 pb-2">
+            <div className="flex-1 overflow-y-auto min-h-0 p-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                <div className="flex flex-col gap-3 pr-2 pb-2">
                     {loading ? (
                         <div className="flex items-center gap-2 justify-center py-8">
                             <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
@@ -52,7 +51,7 @@ export function BranchManager() {
                         managers.map((manager) => (
                             <div 
                                 key={manager.id} 
-                                className="group flex items-center justify-between p-3 rounded-2xl bg-white/60 hover:bg-white border border-white/60 hover:border-primary/20 hover:shadow-md transition-all cursor-pointer"
+                                className="group flex items-center justify-between p-3 rounded-2xl bg-white/60 hover:bg-white border border-white/60 hover:border-primary/20 hover:shadow-md transition-all cursor-pointer shrink-0"
                             >
                                 <div className="flex items-center gap-4">
                                     <Avatar className="h-10 w-10 ring-2 ring-transparent group-hover:ring-primary/20 transition-all shadow-sm">
@@ -73,7 +72,7 @@ export function BranchManager() {
                         ))
                     )}
                 </div>
-            </ScrollArea>
+            </div>
         </div>
     )
 }

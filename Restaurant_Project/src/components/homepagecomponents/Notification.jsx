@@ -1,4 +1,3 @@
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Bell, AlertCircle, CheckCircle2, Info, Clock, ArrowRight } from 'lucide-react';
 import { Button } from "@/components/ui/button"
 
@@ -68,8 +67,8 @@ export function Notification() {
             </div>
 
             {/* List */}
-            <ScrollArea className="flex-1 p-4">
-                <div className="flex flex-col gap-3 pr-4 pb-2">
+            <div className="flex-1 overflow-y-auto min-h-0 p-4 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+                <div className="flex flex-col gap-3 pr-2 pb-2">
                     {notifications.map((notification) => {
                         const config = typeConfig[notification.type] || typeConfig.info;
                         const Icon = config.icon;
@@ -77,7 +76,7 @@ export function Notification() {
                         return (
                             <div 
                                 key={notification.id}
-                                className={`group relative flex gap-4 p-4 rounded-2xl border ${config.border} bg-white/60 hover:bg-white transition-all hover:shadow-md cursor-pointer overflow-hidden`}
+                                className={`group relative flex gap-4 p-4 rounded-2xl border ${config.border} bg-white/60 hover:bg-white transition-all hover:shadow-md cursor-pointer overflow-hidden shrink-0`}
                             >
                                 {/* Left Color Accent */}
                                 <div className={`absolute left-0 top-0 bottom-0 w-1 ${config.bg} transition-all group-hover:w-1.5`} />
@@ -108,10 +107,10 @@ export function Notification() {
                         )
                     })}
                 </div>
-            </ScrollArea>
+            </div>
             
             {/* View All Footer */}
-            <div className="p-3 border-t border-slate-200/50 bg-slate-50/50">
+            <div className="p-3 border-t border-slate-200/50 bg-slate-50/50 mt-auto">
                 <Button variant="ghost" className="w-full text-xs font-bold text-slate-500 hover:text-slate-800 h-8">
                     View All Notifications
                 </Button>
