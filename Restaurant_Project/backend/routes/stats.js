@@ -44,6 +44,8 @@ router.get('/income-branch-tracker', async (req, res) => {
     }
 });
 
+let globalTargetIncome = 17500; // In-memory fallback for demo
+
 // Endpoint for the global income target progress
 router.get('/income-target', async (req, res) => {
     try {
@@ -55,15 +57,27 @@ router.get('/income-target', async (req, res) => {
             currentIncome = orders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
         }
 
-        const targetIncome = 17500;
-        let progressPercentage = Math.round((currentIncome / targetIncome) * 100);
+        let progressPercentage = Math.round((currentIncome / globalTargetIncome) * 100);
         if (progressPercentage > 100) progressPercentage = 100;
         
         res.json({
             current: currentIncome,
-            target: targetIncome,
+            target: globalTargetIncome,
             percentage: progressPercentage
         });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// Endpoint to update the global income target
+router.post('/income-target', async (req, res) => {
+    try {
+        const { target } = req.body;
+        if (target && !isNaN(target)) {
+            globalTargetIncome = Number(target);
+        }
+        res.json({ success: true, target: globalTargetIncome });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
