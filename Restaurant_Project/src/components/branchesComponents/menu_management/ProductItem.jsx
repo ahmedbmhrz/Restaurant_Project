@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { RotateCcw } from "lucide-react"
+import { Eye, EyeOff } from "lucide-react"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 export function ProductItem({ product, onUpdateStock, onToggleActive }) {
     return (
@@ -40,16 +41,25 @@ export function ProductItem({ product, onUpdateStock, onToggleActive }) {
                             defaultValue={product.stock_quantity}
                             onBlur={(e) => onUpdateStock(product.id, e.target.value)}
                         />
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`h-8 w-8 rounded-lg ${
-                                product.is_active ? "text-amber-500 bg-amber-500/5" : "text-muted-foreground bg-muted"
-                            }`}
-                            onClick={() => onToggleActive(product.id, product.is_active)}
-                        >
-                            <RotateCcw className="h-3 w-3" />
-                        </Button>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={`h-8 w-8 rounded-lg ${
+                                        product.is_active ? "text-amber-500 bg-amber-500/5 hover:bg-amber-500/10" : "text-muted-foreground bg-muted hover:bg-muted/80"
+                                    }`}
+                                    onClick={() => onToggleActive(product.id, product.is_active)}
+                                >
+                                    {product.is_active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">
+                                <p className="text-xs font-medium">
+                                    {product.is_active ? "Hide from Menu (Make Inactive)" : "Show on Menu (Make Active)"}
+                                </p>
+                            </TooltipContent>
+                        </Tooltip>
                     </div>
                 </div>
             </div>

@@ -66,7 +66,7 @@ export function MenuManagementSheet({ products = [], branchId, refreshData }) {
                     </SheetHeader>
                 </div>
 
-                <Tabs defaultValue="list" className="flex-1 flex flex-col">
+                <Tabs defaultValue="list" className="flex-1 flex flex-col min-h-0">
                     <div className="px-8 border-b">
                         <TabsList className="bg-muted/50 p-1 rounded-xl h-11 w-full grid grid-cols-2">
                             <TabsTrigger value="list" className="rounded-lg text-[10px] font-black uppercase tracking-widest gap-2">
@@ -78,7 +78,7 @@ export function MenuManagementSheet({ products = [], branchId, refreshData }) {
                         </TabsList>
                     </div>
 
-                    <TabsContent value="list" className="flex-1 overflow-y-auto p-8 pt-6">
+                    <TabsContent value="list" className="flex-1 min-h-0 overflow-hidden p-8 pt-6">
                         <ProductList 
                             products={products} 
                             onUpdateStock={handleUpdateStock} 
