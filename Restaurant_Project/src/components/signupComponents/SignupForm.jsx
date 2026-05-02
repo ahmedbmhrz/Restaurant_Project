@@ -1,22 +1,57 @@
 import { useState } from "react"
-import { User, Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight } from "lucide-react"
+import { Link, useNavigate } from "react-router-dom"
+import { User, Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowRight, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { supabase } from "../../lib/supabase"
 
 export function SignupForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
-    // Simulate signup
-    setTimeout(() => setIsLoading(false), 2000)
+    setError(null)
+    
+    const email = e.target.email.value;
+    const password = e.target.password.value;
+    const fullname = e.target.fullname.value;
+
+    try {
+      const { data, error: authError } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        options: {
+          data: {
+            full_name: fullname,
+          }
+        }
+      })
+
+      if (authError) throw authError;
+
+      // Success! Redirect to the dashboard
+      navigate("/")
+    } catch (error) {
+      setError(error.message || "Failed to create an account.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium animate-in fade-in zoom-in-95 duration-300">
+          <AlertCircle className="h-4 w-4 shrink-0" />
+          <p>{error}</p>
+        </div>
+      )}
+
       <div className="space-y-2">
         <Label htmlFor="fullname" className="text-sm font-bold text-slate-700 ml-1">Full Name</Label>
         <div className="relative group">

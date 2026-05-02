@@ -4,6 +4,7 @@ import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { supabase } from "../../lib/supabase"
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
@@ -11,7 +12,7 @@ export function LoginForm() {
   const [error, setError] = useState(null)
   const navigate = useNavigate()
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
@@ -19,19 +20,24 @@ export function LoginForm() {
     const email = e.target.email.value;
     const password = e.target.password.value;
 
-    // Simulate network request
-    setTimeout(() => {
-      setIsLoading(false)
-      
-      // DUMMY AUTHENTICATION LOGIC
-      if (email === "admin@nexus.com" && password === "password123") {
-        // Success! Redirect to the dashboard
-        navigate("/")
-      } else {
-        // Fail! Show error message
-        setError("Invalid email or password. (Hint: use admin@nexus.com / password123)")
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      })
+
+      if (error) {
+        throw error;
       }
-    }, 1500)
+
+      // Success! Redirect to the dashboard
+      navigate("/")
+    } catch (error) {
+      // Fail! Show actual Supabase error message
+      setError(error.message || "Failed to log in. Please check your credentials.")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
