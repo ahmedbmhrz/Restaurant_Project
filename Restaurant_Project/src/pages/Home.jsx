@@ -11,25 +11,19 @@ import { IncomeTargetProgress } from "../components/homepagecomponents/IncomeTar
 function Home() {
 
     return (
-        <div className="min-h-svh flex flex-col bg-muted/90 scroll">
+        <div className="min-h-screen flex flex-col bg-muted/90">
             <Navbar />
-            <main className="flex-1 p-6 md:p-10 space-y-6">
+            <main className="flex-1 p-4 lg:p-8 flex flex-col gap-6 lg:gap-8">
 
-                <div className="flex flex-col lg:flex-row gap-6 h-[420px]">
-
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 lg:h-[460px]">
                     <IncomeBranchTracker />
-
                     <Notification />
-
                 </div>
-                <div className="flex flex-col lg:flex-row gap-6 h-[340px]">
-
+                
+                <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 lg:h-[380px]">
                     <BranchManager />
-
                     <Prediction />
-
                     <IncomeTargetProgress />
-
                 </div>
             </main>
         </div>
