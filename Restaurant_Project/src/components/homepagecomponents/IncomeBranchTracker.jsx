@@ -1,13 +1,7 @@
-
 import { useState, useEffect } from "react"
-import {
-    Card,
-    CardContent,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card"
 import { ChartContainer } from "@/components/ui/chart"
 import { Bar, BarChart, XAxis, Cell } from "recharts"
+import { TrendingUp, MapPin } from "lucide-react"
 
 const chartConfig = {
     income: {
@@ -40,73 +34,95 @@ export function IncomeBranchTracker() {
 
     if (loading) {
         return (
-            <Card className="flex-none lg:w-3xl h-72 flex items-center justify-center">
-                <p className="text-muted-foreground">Loading chart data...</p>
-            </Card>
+            <div className="lg:w-2/3 h-full flex items-center justify-center bg-white/40 backdrop-blur-xl border border-white/40 shadow-sm rounded-3xl">
+                <div className="flex items-center gap-2">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+                    <p className="text-sm font-bold text-slate-500">Loading chart data...</p>
+                </div>
+            </div>
         )
     }
 
     if (!chartData || chartData.length === 0) {
         return (
-            <Card className="flex-none lg:w-3xl h-72 flex items-center justify-center">
-                <p className="text-muted-foreground">No branches found.</p>
-            </Card>
+            <div className="lg:w-2/3 h-full flex items-center justify-center bg-white/40 backdrop-blur-xl border border-white/40 shadow-sm rounded-3xl">
+                <p className="text-sm font-bold text-slate-500">No branches found.</p>
+            </div>
         )
     }
 
     return (
-        <Card className="flex-none lg:w-3xl">
-            <CardHeader>
-                <CardTitle className="text-2xl">Income Branch Tracker</CardTitle>
-            </CardHeader>
-            <CardContent className="pl-2 flex flex-row items-end justify-between">
-                <div className="flex flex-col space-y-1 p-5">
-                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
-                        {activeBranch ? activeBranch.fullName : "Select a branch"}
-                    </p>
-                    <h3 className="text-4xl font-black text-primary">
+        <div className="lg:w-2/3 flex flex-col h-full bg-white/40 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl overflow-hidden relative">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-slate-200/50">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                        <TrendingUp className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">Income Branch Tracker</h2>
+                        <p className="text-xs font-medium text-slate-500">Revenue across all branches</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 flex flex-col lg:flex-row items-center justify-between p-6 gap-8">
+                
+                {/* Left Side: Stats */}
+                <div className="flex flex-col space-y-2 p-6 bg-white/60 rounded-3xl border border-white/60 shadow-sm min-w-[220px]">
+                    <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            {activeBranch ? activeBranch.fullName : "Select a branch"}
+                        </p>
+                    </div>
+                    <h3 className="text-5xl font-black text-slate-800 tracking-tighter">
                         ${activeBranch ? activeBranch.income.toLocaleString() : "0"}
                     </h3>
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
+                    <div className="flex items-center gap-2 mt-4">
+                        <span className="text-sm font-bold text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-full flex items-center gap-1">
+                            <TrendingUp className="h-3 w-3" />
                             {activeBranch ? activeBranch.increase : "0%"}
                         </span>
-                        <p className="text-xs text-muted-foreground italic">
+                        <p className="text-xs font-medium text-slate-400 italic">
                             vs last month
                         </p>
                     </div>
                 </div>
-                <ChartContainer config={chartConfig} className="min-h-52 w-96 mr-4">
-                    <BarChart accessibilityLayer data={chartData} margin={{ top: 20 }}>
-                        <XAxis
-                            dataKey="branchName" // Tells it to use the "branchName" field (A, B, C...)
-                            tickLine={false}// Hides the little tick marks
-                            tickMargin={10}// Adds space between bar and text
-                            axisLine={false}// Hides the bottom line
 
-                        />
-                        <Bar
-                            dataKey="income"
-                            fill="var(--color-income)"
-                            radius={15}
-                            barSize={30}
-                            onClick={(data) => setActiveBranch(data.payload)}
-                            cursor="pointer" // Changes mouse to a hand pointer
-                        >
-                            {chartData.map((entry, index) => (
-                                <Cell
-                                    key={`cell-${index}`}
-                                    fill={activeBranch?.id === entry.id ? "var(--color-income)" : "#f3f4f6"}
-                                    className="transition-all duration-300"
-                                />
-
-
-                            ))}
-                        </Bar>
-                    </BarChart>
-                </ChartContainer>
-            </CardContent>
-        </Card>
-
+                {/* Right Side: Chart */}
+                <div className="flex-1 w-full h-full min-h-[220px] flex items-end">
+                    <ChartContainer config={chartConfig} className="w-full h-full max-h-[260px]">
+                        <BarChart accessibilityLayer data={chartData} margin={{ top: 20 }}>
+                            <XAxis
+                                dataKey="branchName"
+                                tickLine={false}
+                                tickMargin={10}
+                                axisLine={false}
+                                className="text-[10px] font-bold fill-slate-400"
+                            />
+                            <Bar
+                                dataKey="income"
+                                fill="var(--color-income)"
+                                radius={[8, 8, 8, 8]}
+                                barSize={40}
+                                onClick={(data) => setActiveBranch(data.payload)}
+                                cursor="pointer"
+                            >
+                                {chartData.map((entry, index) => (
+                                    <Cell
+                                        key={`cell-${index}`}
+                                        fill={activeBranch?.id === entry.id ? "var(--color-income)" : "rgba(0, 173, 181, 0.15)"}
+                                        className="transition-all duration-300 hover:opacity-80"
+                                    />
+                                ))}
+                            </Bar>
+                        </BarChart>
+                    </ChartContainer>
+                </div>
+            </div>
+        </div>
     )
 }

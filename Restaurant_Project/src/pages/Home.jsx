@@ -15,14 +15,14 @@ function Home() {
             <Navbar />
             <main className="flex-1 p-6 md:p-10 space-y-6">
 
-                <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex flex-col lg:flex-row gap-6 h-[420px]">
 
                     <IncomeBranchTracker />
 
                     <Notification />
 
                 </div>
-                <div className="flex flex-col lg:flex-row gap-4">
+                <div className="flex flex-col lg:flex-row gap-6 h-[340px]">
 
                     <BranchManager />
 

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Users, ChevronRight } from "lucide-react"
 
 export function BranchManager() {
     const [managers, setManagers] = useState([])
@@ -24,34 +24,52 @@ export function BranchManager() {
     }, [])
 
     return (
-        <div className="flex-1">
-            <h2 className="text-xl font-bold mb-4">Branch Manager</h2>
-            <ScrollArea className="h-48 w-full rounded-md border-2 p-4">
-                <div className="flex flex-col gap-6">
+        <div className="flex-1 flex flex-col h-full bg-white/40 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl overflow-hidden relative">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 pb-4 border-b border-slate-200/50">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-xl text-primary">
+                        <Users className="h-5 w-5" />
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-slate-800">Branch Managers</h2>
+                        <p className="text-xs font-medium text-slate-500">Active personnel directory</p>
+                    </div>
+                </div>
+            </div>
+
+            {/* List */}
+            <ScrollArea className="flex-1 p-4">
+                <div className="flex flex-col gap-3 pr-4 pb-2">
                     {loading ? (
-                        <p className="text-muted-foreground">Loading managers...</p>
+                        <div className="flex items-center gap-2 justify-center py-8">
+                            <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+                            <p className="text-sm font-bold text-slate-500">Loading directory...</p>
+                        </div>
                     ) : managers.length === 0 ? (
-                        <p className="text-muted-foreground">No managers found.</p>
+                        <p className="text-sm font-bold text-slate-500 text-center py-8">No managers found.</p>
                     ) : (
                         managers.map((manager) => (
-                            <Card key={manager.id} className="p-4">
+                            <div 
+                                key={manager.id} 
+                                className="group flex items-center justify-between p-3 rounded-2xl bg-white/60 hover:bg-white border border-white/60 hover:border-primary/20 hover:shadow-md transition-all cursor-pointer"
+                            >
                                 <div className="flex items-center gap-4">
-                                    <Avatar className="h-12 w-12">
+                                    <Avatar className="h-10 w-10 ring-2 ring-transparent group-hover:ring-primary/20 transition-all shadow-sm">
                                         <AvatarImage src={`https://api.dicebear.com/7.x/initials/svg?seed=${manager.full_name}`} />
-                                        <AvatarFallback>{manager.full_name ? manager.full_name.substring(0, 2).toUpperCase() : 'MG'}</AvatarFallback>
+                                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                                            {manager.full_name ? manager.full_name.substring(0, 2).toUpperCase() : 'MG'}
+                                        </AvatarFallback>
                                     </Avatar>
-
-                                    <div className="flex-1">
-                                        <h4 className="font-semibold">{manager.full_name}</h4>
-                                        <p className="text-muted-foreground">Manager</p>
+                                    <div>
+                                        <h4 className="text-sm font-bold text-slate-800 leading-none mb-1">{manager.full_name}</h4>
+                                        <p className="text-xs font-medium text-slate-500 leading-none">Regional Manager</p>
                                     </div>
-
-                                    <Button variant="outline">Profile</Button>
                                 </div>
-                                <div className="mt-2 text-muted-foreground">
-                                    Managing branch operations effectively.
+                                <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                                    <ChevronRight className="h-4 w-4" />
                                 </div>
-                            </Card>
+                            </div>
                         ))
                     )}
                 </div>
