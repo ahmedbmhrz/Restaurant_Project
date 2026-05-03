@@ -90,6 +90,7 @@ function Branches() {
                     <div className="flex-1 lg:max-w-md h-full min-h-0 overflow-hidden bg-white/40 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl p-6">
                         <ManagersnBranch
                             managers={pageData.managers}
+                            branches={pageData.allBranches}
                             selectedBranchId={pageData.targetBranchId}
                             onSelectManager={setSelectedBranchId}
                         />
