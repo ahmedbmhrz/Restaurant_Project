@@ -314,7 +314,7 @@ router.get('/branches-page-data', async (req, res) => {
 
         const { data: allUsers } = await supabase
             .from('users')
-            .select('id, full_name, role');
+            .select('id, full_name, role, branch_id');
 
         const operationalData = {
             traffic: traffic,

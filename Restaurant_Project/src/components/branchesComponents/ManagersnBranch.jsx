@@ -152,7 +152,7 @@ export function ManagersnBranch({ managers = [], branches = [], allUsers = [], o
                                                             defaultValue=""
                                                         >
                                                             <option value="" disabled>Select Manager</option>
-                                                            {allUsers.filter(u => u.role === 'Branch_Manager' || u.role === 'Manager').map(u => (
+                                                            {allUsers.filter(u => (u.role === 'Branch_Manager' || u.role === 'Manager') && !u.branch_id).map(u => (
                                                                 <option key={u.id} value={u.id}>{u.full_name}</option>
                                                             ))}
                                                         </select>
