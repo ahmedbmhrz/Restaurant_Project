@@ -18,6 +18,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { supabase } from "../../lib/supabase"
 import { useNavigate } from "react-router-dom"
+import { useState } from "react"
+import { AccountSettingsModal } from "./AccountSettingsModal"
 
 /**
  * USERPROFILE COMPONENT
@@ -25,6 +27,7 @@ import { useNavigate } from "react-router-dom"
  */
 export function UserProfile({ user }) {
     const navigate = useNavigate()
+    const [showSettings, setShowSettings] = useState(false)
 
     const handleSignOut = async () => {
         await supabase.auth.signOut()
@@ -45,9 +48,10 @@ export function UserProfile({ user }) {
                         <p className="text-[11px] font-bold leading-none text-slate-900">{fullName}</p>
                         <p className="text-[10px] leading-none text-slate-500 mt-1">Administrator</p>
                     </div>
-                    <Avatar className="h-8 w-8 ring-2 ring-background group-hover:ring-primary/20 transition-all shadow-sm">
-                        <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${firstName}`} />
-                        <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials}</AvatarFallback>
+                    <Avatar className="h-8 w-8 ring-2 ring-background group-hover:ring-primary/20 transition-all shadow-sm border border-primary/10">
+                        <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-[10px] font-black shadow-inner">
+                            {initials}
+                        </AvatarFallback>
                     </Avatar>
                     <ChevronDown className="h-3 w-3 text-muted-foreground mr-1 hidden sm:block opacity-50" />
                 </button>
@@ -61,7 +65,10 @@ export function UserProfile({ user }) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup className="p-1">
-                    <DropdownMenuItem className="cursor-pointer py-2 rounded-lg">
+                    <DropdownMenuItem 
+                        className="cursor-pointer py-2 rounded-lg"
+                        onClick={() => setShowSettings(true)}
+                    >
                         <User className="mr-2 h-4 w-4 text-muted-foreground" />
                         <span className="font-medium text-sm">Account Settings</span>
                     </DropdownMenuItem>
@@ -92,6 +99,12 @@ export function UserProfile({ user }) {
                     </DropdownMenuItem>
                 </div>
             </DropdownMenuContent>
+            
+            <AccountSettingsModal 
+                isOpen={showSettings} 
+                onClose={() => setShowSettings(false)} 
+                user={user} 
+            />
         </DropdownMenu>
     );
 }
