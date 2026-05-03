@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { 
     Plus, 
     ShoppingBag, 
@@ -14,12 +15,15 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { QuickActionModal } from "./QuickActionModal"
 
 /**
  * QUICKACTIONS COMPONENT
  * A centralized hub for rapid administrative tasks such as adding products, hiring staff, or creating branches.
  */
 export function QuickActions() {
+    const [actionType, setActionType] = useState(null);
+
     return (
         <div className="hidden sm:block">
             <DropdownMenu>
@@ -33,7 +37,7 @@ export function QuickActions() {
                         Quick Creation
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer py-2.5">
+                    <DropdownMenuItem className="cursor-pointer py-2.5" onSelect={() => setActionType('product')}>
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-600 mr-3">
                             <ShoppingBag className="h-4 w-4" />
                         </div>
@@ -42,7 +46,7 @@ export function QuickActions() {
                             <span className="text-[10px] text-muted-foreground">Expand your menu</span>
                         </div>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer py-2.5">
+                    <DropdownMenuItem className="cursor-pointer py-2.5" onSelect={() => setActionType('staff')}>
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-600 mr-3">
                             <UserPlus className="h-4 w-4" />
                         </div>
@@ -51,7 +55,7 @@ export function QuickActions() {
                             <span className="text-[10px] text-muted-foreground">Manage your team</span>
                         </div>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer py-2.5">
+                    <DropdownMenuItem className="cursor-pointer py-2.5" onSelect={() => setActionType('branch')}>
                         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600 mr-3">
                             <Store className="h-4 w-4" />
                         </div>
@@ -67,6 +71,12 @@ export function QuickActions() {
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
+
+            <QuickActionModal 
+                actionType={actionType} 
+                isOpen={!!actionType} 
+                onClose={() => setActionType(null)} 
+            />
         </div>
     );
 }

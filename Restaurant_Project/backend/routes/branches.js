@@ -28,6 +28,25 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * POST /api/
+ * Creates a new branch in the system.
+ */
+router.post('/', async (req, res) => {
+    const { name, address, description } = req.body;
+    try {
+        const { data, error } = await supabase
+            .from('branches')
+            .insert([{ name, address, description }])
+            .select();
+        
+        if (error) throw error;
+        res.json(data[0]);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+/**
  * PATCH /api/:id
  * Updates specific profile details for a target branch ID.
  * Body: { name, address, description }

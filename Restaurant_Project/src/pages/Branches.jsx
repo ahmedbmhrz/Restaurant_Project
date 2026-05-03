@@ -39,6 +39,16 @@ function Branches() {
 
     useEffect(() => {
         fetchPageData();
+
+        // Listen for global Quick Creation events to auto-refresh data smoothly
+        const handleQuickAction = () => {
+            fetchPageData();
+        };
+        window.addEventListener('quickActionComplete', handleQuickAction);
+        
+        return () => {
+            window.removeEventListener('quickActionComplete', handleQuickAction);
+        };
     }, [selectedBranchId]); 
 
     if (!pageData) {
