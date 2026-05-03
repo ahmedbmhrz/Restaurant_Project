@@ -77,9 +77,16 @@ export function ManagersnBranch({ managers = [], branches = [], allUsers = [], o
             const term = searchTerm.toLowerCase();
             const nameMatch = (b.name || "").toLowerCase().includes(term);
             const addressMatch = (b.address || "").toLowerCase().includes(term);
-            return nameMatch || addressMatch;
+            
+            // Check if any manager assigned to this branch matches the search term
+            const branchManagers = managers.filter(m => m.branch_id === b.id);
+            const managerMatch = branchManagers.some(m => 
+                (m.name || "").toLowerCase().includes(term)
+            );
+
+            return nameMatch || addressMatch || managerMatch;
         });
-    }, [branches, searchTerm]);
+    }, [branches, managers, searchTerm]);
 
     return (
         <div className="h-full flex flex-col overflow-hidden">
