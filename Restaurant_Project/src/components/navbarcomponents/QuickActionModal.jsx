@@ -81,7 +81,7 @@ export function QuickActionModal({ actionType, isOpen, onClose }) {
                     </DialogHeader>
                 </div>
 
-                <div className="p-8 space-y-6 bg-slate-50/50">
+                <div className="p-8 space-y-6 bg-slate-50/50 max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 rounded-b-3xl">
                     {/* Branch Selector for context-dependent actions */}
                     {(actionType === 'product' || actionType === 'staff') && (
                         <div className="space-y-2">
