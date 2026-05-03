@@ -1,17 +1,42 @@
 import { useState, useMemo } from "react"
-import { Search } from "lucide-react"
+import { Search, Loader2 } from "lucide-react"
 import { ManagerCard } from "./ManagerCard"
 import { ManagerProfileModal } from "./ManagerProfileModal"
 
-export function ManagersnBranch({ managers = [], branches = [], onSelectManager, selectedBranchId }) {
+export function ManagersnBranch({ managers = [], branches = [], allUsers = [], onSelectManager, selectedBranchId }) {
     const [selectedManager, setSelectedManager] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [viewMode, setViewMode] = useState("managers");
+    const [assigningBranchId, setAssigningBranchId] = useState(null);
+    const [isAssigning, setIsAssigning] = useState(false);
 
     const handleJumpToBranch = (branchId) => {
         if (onSelectManager) {
             onSelectManager(branchId);
             setSelectedManager(null);
+        }
+    };
+
+    const handleAssignManager = async (e, branchId, userId) => {
+        e.stopPropagation();
+        if (!userId) return;
+        setIsAssigning(true);
+        try {
+            const res = await fetch(`http://localhost:5000/api/users/${userId}/branch`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ branch_id: branchId, role: 'Branch_Manager' })
+            });
+            if (res.ok) {
+                setAssigningBranchId(null);
+                window.dispatchEvent(new Event('quickActionComplete')); 
+            } else {
+                console.error("Failed to assign manager");
+            }
+        } catch (error) {
+            console.error("Assignment Error:", error);
+        } finally {
+            setIsAssigning(false);
         }
     };
 
@@ -106,11 +131,42 @@ export function ManagersnBranch({ managers = [], branches = [], onSelectManager,
                                         )}
                                     </div>
                                     <p className="text-xs text-slate-500 truncate mb-2">{branch.address}</p>
-                                    <div className="text-[10px] font-medium flex items-center gap-1.5">
-                                        <span className={`w-1.5 h-1.5 rounded-full ${branchManager ? 'bg-emerald-400' : 'bg-slate-300'}`}></span>
-                                        <span className={branchManager ? 'text-slate-600' : 'text-slate-400 italic'}>
-                                            {branchManager ? `Managed by ${branchManager.name}` : 'No Manager Assigned'}
-                                        </span>
+                                    
+                                    <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-100/50">
+                                        <div className="text-[10px] font-medium flex items-center gap-1.5">
+                                            <span className={`w-1.5 h-1.5 rounded-full ${branchManager ? 'bg-emerald-400' : 'bg-rose-400 animate-pulse'}`}></span>
+                                            <span className={branchManager ? 'text-slate-600' : 'text-rose-500 font-bold'}>
+                                                {branchManager ? `Managed by ${branchManager.name}` : 'No Manager Assigned'}
+                                            </span>
+                                        </div>
+                                        
+                                        {!branchManager && (
+                                            assigningBranchId === branch.id ? (
+                                                <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                                                    {isAssigning ? (
+                                                        <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                                                    ) : (
+                                                        <select 
+                                                            className="text-[10px] bg-white border border-slate-200 rounded px-1 py-1 outline-none font-bold text-indigo-600 shadow-sm cursor-pointer"
+                                                            onChange={(e) => handleAssignManager(e, branch.id, e.target.value)}
+                                                            defaultValue=""
+                                                        >
+                                                            <option value="" disabled>Select Manager</option>
+                                                            {allUsers.filter(u => u.role === 'Branch_Manager').map(u => (
+                                                                <option key={u.id} value={u.id}>{u.full_name}</option>
+                                                            ))}
+                                                        </select>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); setAssigningBranchId(branch.id); }}
+                                                    className="text-[9px] font-black uppercase bg-indigo-100 text-indigo-700 px-2.5 py-1 rounded-md hover:bg-indigo-200 transition-colors shadow-sm"
+                                                >
+                                                    Assign
+                                                </button>
+                                            )
+                                        )}
                                     </div>
                                 </div>
                             )

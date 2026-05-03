@@ -91,6 +91,7 @@ function Branches() {
                         <ManagersnBranch
                             managers={pageData.managers}
                             branches={pageData.allBranches}
+                            allUsers={pageData.operationalData.allUsers}
                             selectedBranchId={pageData.targetBranchId}
                             onSelectManager={setSelectedBranchId}
                         />
