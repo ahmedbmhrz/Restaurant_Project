@@ -68,7 +68,7 @@ function Branches() {
     return (
         <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
             <Navbar />
-            <main className="flex-1 p-4 md:p-8 flex flex-col gap-6 h-[calc(100vh-64px)] overflow-hidden max-w-[1600px] mx-auto w-full">
+            <main className="flex-1 p-4 md:p-8 flex flex-col gap-6 h-[calc(100vh-64px)] overflow-hidden w-full">
                 
                 {/* Clean Header */}
                 <div className="flex-none pb-2 pl-2">
