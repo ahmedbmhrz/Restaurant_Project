@@ -20,6 +20,7 @@ import { supabase } from "../../lib/supabase"
 import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { AccountSettingsModal } from "./AccountSettingsModal"
+import { BillingModal } from "./BillingModal"
 
 /**
  * USERPROFILE COMPONENT
@@ -28,6 +29,7 @@ import { AccountSettingsModal } from "./AccountSettingsModal"
 export function UserProfile({ user }) {
     const navigate = useNavigate()
     const [showSettings, setShowSettings] = useState(false)
+    const [showBilling, setShowBilling] = useState(false)
 
     const handleSignOut = async () => {
         await supabase.auth.signOut()
@@ -72,7 +74,10 @@ export function UserProfile({ user }) {
                         <User className="mr-2 h-4 w-4 text-muted-foreground" />
                         <span className="font-medium text-sm">Account Settings</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer py-2 rounded-lg">
+                    <DropdownMenuItem 
+                        className="cursor-pointer py-2 rounded-lg"
+                        onClick={() => setShowBilling(true)}
+                    >
                         <CreditCard className="mr-2 h-4 w-4 text-muted-foreground" />
                         <span className="font-medium text-sm">Billing & Plan</span>
                     </DropdownMenuItem>
@@ -104,6 +109,11 @@ export function UserProfile({ user }) {
                 isOpen={showSettings} 
                 onClose={() => setShowSettings(false)} 
                 user={user} 
+            />
+
+            <BillingModal 
+                isOpen={showBilling} 
+                onClose={() => setShowBilling(false)} 
             />
         </DropdownMenu>
     );
