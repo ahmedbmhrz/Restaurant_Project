@@ -21,6 +21,8 @@ import { useNavigate } from "react-router-dom"
 import { useState } from "react"
 import { AccountSettingsModal } from "./AccountSettingsModal"
 import { BillingModal } from "./BillingModal"
+import { IntegrationModal } from "./IntegrationModal"
+import { SupportModal } from "./SupportModal"
 
 /**
  * USERPROFILE COMPONENT
@@ -30,6 +32,8 @@ export function UserProfile({ user }) {
     const navigate = useNavigate()
     const [showSettings, setShowSettings] = useState(false)
     const [showBilling, setShowBilling] = useState(false)
+    const [showIntegrations, setShowIntegrations] = useState(false)
+    const [showSupport, setShowSupport] = useState(false)
 
     const handleSignOut = async () => {
         await supabase.auth.signOut()
@@ -81,14 +85,20 @@ export function UserProfile({ user }) {
                         <CreditCard className="mr-2 h-4 w-4 text-muted-foreground" />
                         <span className="font-medium text-sm">Billing & Plan</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer py-2 rounded-lg">
+                    <DropdownMenuItem 
+                        className="cursor-pointer py-2 rounded-lg"
+                        onClick={() => setShowIntegrations(true)}
+                    >
                         <Settings className="mr-2 h-4 w-4 text-muted-foreground" />
                         <span className="font-medium text-sm">Integration Manager</span>
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup className="p-1">
-                    <DropdownMenuItem className="cursor-pointer py-2 rounded-lg">
+                    <DropdownMenuItem 
+                        className="cursor-pointer py-2 rounded-lg"
+                        onClick={() => setShowSupport(true)}
+                    >
                         <LifeBuoy className="mr-2 h-4 w-4 text-muted-foreground" />
                         <span className="font-medium text-sm">Help & Support</span>
                     </DropdownMenuItem>
@@ -114,6 +124,16 @@ export function UserProfile({ user }) {
             <BillingModal 
                 isOpen={showBilling} 
                 onClose={() => setShowBilling(false)} 
+            />
+
+            <IntegrationModal 
+                isOpen={showIntegrations} 
+                onClose={() => setShowIntegrations(false)} 
+            />
+
+            <SupportModal 
+                isOpen={showSupport} 
+                onClose={() => setShowSupport(false)} 
             />
         </DropdownMenu>
     );
