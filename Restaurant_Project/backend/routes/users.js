@@ -9,7 +9,7 @@ router.get('/branch-managers', async (req, res) => {
         const { data: managers, error } = await supabase
             .from('users')
             .select('*')
-            .eq('role', 'Branch_Manager');
+            .in('role', ['Branch_Manager', 'Manager']);
 
         if (error) throw error;
         res.json(managers);

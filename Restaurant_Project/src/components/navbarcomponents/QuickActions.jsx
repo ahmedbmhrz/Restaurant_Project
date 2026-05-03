@@ -4,7 +4,8 @@ import {
     ShoppingBag, 
     UserPlus, 
     Store, 
-    PlusCircle 
+    PlusCircle,
+    ShieldCheck
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -53,6 +54,15 @@ export function QuickActions() {
                         <div className="flex flex-col">
                             <span className="font-semibold text-sm">Hire New Staff</span>
                             <span className="text-[10px] text-muted-foreground">Manage your team</span>
+                        </div>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer py-2.5" onSelect={() => setActionType('manager')}>
+                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-600 mr-3">
+                            <ShieldCheck className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="font-semibold text-sm">Hire New Manager</span>
+                            <span className="text-[10px] text-muted-foreground">Appoint new leadership</span>
                         </div>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="cursor-pointer py-2.5" onSelect={() => setActionType('branch')}>

@@ -16,12 +16,30 @@ const router = express.Router();
  */
 router.get('/', async (req, res) => {
     try {
-        const { data, error } = await supabase
+        // Fetch all branches
+        const { data: branches, error: bError } = await supabase
             .from('branches')
             .select('*');
+        if (bError) throw bError;
 
-        if (error) throw error;
-        res.json(data);
+        // Fetch all branch managers (checking for both 'Branch_Manager' and 'Manager' roles)
+        const { data: managers, error: mError } = await supabase
+            .from('users')
+            .select('id, full_name, role, branch_id')
+            .in('role', ['Branch_Manager', 'Manager']);
+        if (mError) throw mError;
+        
+        // Merge data
+        const transformedData = branches.map(branch => {
+            const manager = (managers || []).find(m => m.branch_id === branch.id);
+            return {
+                ...branch,
+                hasManager: !!manager,
+                managerName: manager ? manager.full_name : null
+            };
+        });
+
+        res.json(transformedData);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -83,7 +101,7 @@ router.get('/branches-page-data', async (req, res) => {
         const { data: managers, error: managerError } = await supabase
             .from('users')
             .select('*, branches(name)')
-            .eq('role', 'Branch_Manager');
+            .in('role', ['Branch_Manager', 'Manager']);
         if (managerError) throw managerError;
 
         // Resolve which branch to focus on (either requested ID or the first manager's branch)

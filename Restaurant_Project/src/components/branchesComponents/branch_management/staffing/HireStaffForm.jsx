@@ -3,9 +3,9 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Check, Loader2, AlertCircle } from "lucide-react"
 
-export function HireStaffForm({ branchId, onSuccess }) {
+export function HireStaffForm({ branchId, onSuccess, defaultRole = "Waiter", lockedRole = false }) {
     const [newName, setNewName] = useState("");
-    const [newRole, setNewRole] = useState("Waiter");
+    const [newRole, setNewRole] = useState(defaultRole);
     const [isSaving, setIsSaving] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
 
@@ -54,13 +54,14 @@ export function HireStaffForm({ branchId, onSuccess }) {
                 <div className="space-y-1">
                     <Label className="text-[9px] font-bold uppercase ml-1 opacity-70">Duty / Role</Label>
                     <select 
-                        className="w-full bg-background border border-border/50 rounded-lg px-2.5 py-1.5 text-[11px] font-bold appearance-none cursor-pointer focus:ring-2 focus:ring-primary/20 outline-none"
+                        className={`w-full bg-background border border-border/50 rounded-lg px-2.5 py-1.5 text-[11px] font-bold appearance-none outline-none ${lockedRole ? 'opacity-70 bg-slate-50 cursor-not-allowed' : 'cursor-pointer focus:ring-2 focus:ring-primary/20'}`}
                         value={newRole}
                         onChange={(e) => setNewRole(e.target.value)}
+                        disabled={lockedRole}
                     >
                         <option value="Waiter">Waiter</option>
                         <option value="Chef">Chef</option>
-                        <option value="Manager">Manager</option>
+                        <option value="Branch_Manager">Manager</option>
                         <option value="Host">Host</option>
                         <option value="Security">Security</option>
                     </select>
