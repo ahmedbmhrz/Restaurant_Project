@@ -388,7 +388,7 @@ router.get('/branches-page-data', async (req, res) => {
             return {
                 ...m,
                 name: name,
-                branchName: m.branches?.name || 'Unknown Branch',
+                branchName: m.branches?.name || 'Unassigned',
                 avatarSrc: m.avatar_url || undefined,
                 avatarFallback: initials,
                 role: m.role || 'Managing Director',
