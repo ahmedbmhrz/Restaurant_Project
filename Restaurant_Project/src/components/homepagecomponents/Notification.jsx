@@ -44,7 +44,14 @@ export function Notification() {
             try {
                 const res = await fetch('http://localhost:5000/api/notifications');
                 const data = await res.json();
-                setNotifications(data);
+                
+                // Filter out notifications cleared by the user
+                const lastClear = localStorage.getItem('nexus_notifications_last_clear');
+                const filteredData = lastClear 
+                    ? data.filter(n => new Date(n.timestamp) > new Date(lastClear))
+                    : data;
+
+                setNotifications(filteredData);
                 setLoading(false);
             } catch (err) {
                 console.error("Error fetching notifications:", err);
@@ -53,6 +60,11 @@ export function Notification() {
         };
         fetchNotifications();
     }, []);
+
+    const handleClearAll = () => {
+        setNotifications([]);
+        localStorage.setItem('nexus_notifications_last_clear', new Date().toISOString());
+    };
 
     return (
         <div className="flex-1 flex flex-col h-full bg-white/40 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl overflow-hidden relative">
@@ -71,7 +83,7 @@ export function Notification() {
                 <Button 
                     variant="ghost" 
                     size="sm" 
-                    onClick={() => setNotifications([])}
+                    onClick={handleClearAll}
                     className="text-xs font-bold text-primary hover:bg-primary/5"
                 >
                     Mark all read
@@ -148,6 +160,7 @@ export function Notification() {
                 isOpen={showAll} 
                 onOpenChange={setShowAll} 
                 notifications={notifications} 
+                onClearAll={handleClearAll}
             />
         </div>
     )

@@ -6,7 +6,13 @@ import {
     DialogTitle, 
     DialogDescription 
 } from "@/components/ui/dialog"
-import { Bell, AlertCircle, CheckCircle2, Info, Clock, Search, Filter, Trash2, CheckCheck } from 'lucide-react'
+import { 
+    DropdownMenu, 
+    DropdownMenuContent, 
+    DropdownMenuItem, 
+    DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu"
+import { Bell, AlertCircle, CheckCircle2, Info, Clock, Search, Filter, Trash2, CheckCheck, ChevronDown } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -29,14 +35,9 @@ const formatFullTime = (timestamp) => {
     });
 };
 
-export function NotificationsModal({ isOpen, onOpenChange, notifications: initialNotifications }) {
+export function NotificationsModal({ isOpen, onOpenChange, notifications, onClearAll }) {
     const [filter, setFilter] = useState("all");
     const [searchQuery, setSearchQuery] = useState("");
-    const [notifications, setNotifications] = useState(initialNotifications);
-
-    useEffect(() => {
-        setNotifications(initialNotifications);
-    }, [initialNotifications]);
 
     const filteredNotifications = notifications.filter(notif => {
         const matchesFilter = filter === "all" || notif.type === filter;
@@ -44,8 +45,6 @@ export function NotificationsModal({ isOpen, onOpenChange, notifications: initia
                              notif.description.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesFilter && matchesSearch;
     });
-
-    const clearAll = () => setNotifications([]);
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -67,7 +66,7 @@ export function NotificationsModal({ isOpen, onOpenChange, notifications: initia
                             <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                onClick={clearAll}
+                                onClick={onClearAll}
                                 className="text-xs font-bold text-slate-400 hover:text-red-500 hover:bg-red-50"
                             >
                                 <Trash2 className="h-4 w-4 mr-2" />
@@ -77,31 +76,39 @@ export function NotificationsModal({ isOpen, onOpenChange, notifications: initia
                     </div>
 
                     {/* Search and Filters */}
-                    <div className="flex flex-col sm:flex-row gap-4 items-center">
-                        <div className="relative flex-1 w-full">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <div className="flex items-center gap-4 w-full">
+                        <div className="relative flex-[4]">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
                             <Input 
-                                placeholder="Search notifications..." 
+                                placeholder="Search by title, category, or description..." 
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="pl-10 bg-slate-100/50 border-none rounded-xl focus-visible:ring-indigo-500"
+                                className="pl-12 h-14 bg-slate-100/60 border-none rounded-2xl text-base font-medium focus-visible:ring-indigo-500 shadow-inner"
                             />
                         </div>
-                        <div className="flex items-center gap-1 bg-slate-100/50 p-1 rounded-xl w-full sm:w-auto">
-                            {["all", "urgent", "warning", "info"].map((f) => (
-                                <button
-                                    key={f}
-                                    onClick={() => setFilter(f)}
-                                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                        filter === f 
-                                        ? "bg-white text-indigo-600 shadow-sm" 
-                                        : "text-slate-400 hover:text-slate-600"
-                                    }`}
-                                >
-                                    {f}
-                                </button>
-                            ))}
-                        </div>
+                        
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="h-14 px-6 rounded-2xl border-slate-200 flex items-center gap-3 bg-white shadow-sm hover:bg-slate-50 transition-all min-w-[140px]">
+                                    <Filter className="h-4 w-4 text-slate-500" />
+                                    <span className="font-bold text-slate-700 capitalize">{filter}</span>
+                                    <ChevronDown className="h-4 w-4 text-slate-400 ml-auto" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent className="w-56 p-2 rounded-2xl border-none shadow-2xl bg-white/95 backdrop-blur-xl">
+                                {["all", "urgent", "warning", "info", "success"].map((f) => (
+                                    <DropdownMenuItem 
+                                        key={f}
+                                        onClick={() => setFilter(f)}
+                                        className={`rounded-xl px-4 py-3 font-bold uppercase tracking-widest text-[10px] cursor-pointer transition-colors ${
+                                            filter === f ? "bg-indigo-50 text-indigo-600" : "text-slate-500 hover:bg-slate-50"
+                                        }`}
+                                    >
+                                        {f}
+                                    </DropdownMenuItem>
+                                ))}
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                     </div>
                 </div>
 
