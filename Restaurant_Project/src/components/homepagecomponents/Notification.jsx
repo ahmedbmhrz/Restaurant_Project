@@ -1,6 +1,7 @@
 import { Bell, AlertCircle, CheckCircle2, Info, Clock, ArrowRight } from 'lucide-react';
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
+import { NotificationsModal } from "../navbarcomponents/NotificationsModal"
 
 const typeConfig = {
     urgent: { icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
@@ -9,9 +10,34 @@ const typeConfig = {
     info: { icon: Info, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
 }
 
+const formatTimeAgo = (timestamp) => {
+    if (!timestamp) return "Just now";
+    const now = new Date();
+    const past = new Date(timestamp);
+    const diffInMs = now - past;
+    const diffInMins = Math.floor(diffInMs / (1000 * 60));
+    
+    if (diffInMins < 1) return "Just now";
+    if (diffInMins < 60) return `${diffInMins}m ago`;
+    const diffInHours = Math.floor(diffInMins / 60);
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    const diffInDays = Math.floor(diffInHours / 24);
+    return `${diffInDays}d ago`;
+};
+
 export function Notification() {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [tick, setTick] = useState(0);
+    const [showAll, setShowAll] = useState(false);
+
+    // Refresh time-ago strings every minute
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setTick(prev => prev + 1);
+        }, 60000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -42,7 +68,12 @@ export function Notification() {
                         <p className="text-xs font-medium text-slate-500">System & Branch Alerts</p>
                     </div>
                 </div>
-                <Button variant="ghost" size="sm" className="text-xs font-bold text-primary hover:bg-primary/5">
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setNotifications([])}
+                    className="text-xs font-bold text-primary hover:bg-primary/5"
+                >
                     Mark all read
                 </Button>
             </div>
@@ -79,9 +110,12 @@ export function Notification() {
                                             <h3 className="text-sm font-bold text-slate-800 leading-none">
                                                 {notification.title}
                                             </h3>
-                                            <span className="text-[10px] font-bold text-slate-400 whitespace-nowrap">
-                                                {notification.time}
-                                            </span>
+                                            <div className="flex items-center gap-1.5 text-slate-400 shrink-0">
+                                                <Clock className="h-3 w-3" />
+                                                <span className="text-[11px] font-bold whitespace-nowrap">
+                                                    {formatTimeAgo(notification.timestamp)}
+                                                </span>
+                                            </div>
                                         </div>
                                         <p className="text-xs font-medium text-slate-500 leading-relaxed pr-6">
                                             {notification.description}
@@ -101,10 +135,20 @@ export function Notification() {
             
             {/* View All Footer */}
             <div className="p-3 border-t border-slate-200/50 bg-slate-50/50 mt-auto">
-                <Button variant="ghost" className="w-full text-xs font-bold text-slate-500 hover:text-slate-800 h-8">
+                <Button 
+                    variant="ghost" 
+                    onClick={() => setShowAll(true)}
+                    className="w-full text-xs font-bold text-slate-500 hover:text-slate-800 h-8"
+                >
                     View All Notifications
                 </Button>
             </div>
+
+            <NotificationsModal 
+                isOpen={showAll} 
+                onOpenChange={setShowAll} 
+                notifications={notifications} 
+            />
         </div>
     )
 }

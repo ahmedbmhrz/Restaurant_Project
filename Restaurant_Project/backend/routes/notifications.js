@@ -28,7 +28,7 @@ router.get('/notifications', async (req, res) => {
                     id: notifId++,
                     title: "Critical Low Stock",
                     description: `${productName} is critically low (${item.stock_quantity} units) at ${branchName}.`,
-                    time: "Just now",
+                    timestamp: new Date().toISOString(),
                     type: "urgent"
                 });
             });
@@ -39,7 +39,7 @@ router.get('/notifications', async (req, res) => {
         // 2. Performance Warning (Warning)
         const { data: recentOrders, error: orderError } = await supabase
             .from('orders')
-            .select('total_amount')
+            .select('total_amount, created_at')
             .order('created_at', { ascending: false })
             .limit(20);
             
@@ -51,19 +51,18 @@ router.get('/notifications', async (req, res) => {
                     id: notifId++,
                     title: "Performance Warning",
                     description: `Average order value across recent transactions has dropped significantly (Avg: $${Math.round(avgOrder)}).`,
-                    time: "1h ago",
+                    timestamp: recentOrders[0].created_at, // Use the time of the latest order
                     type: "warning"
                 });
             }
         }
 
         // 3. Staffing Alert (Info)
-        // We'll generate a static HQ alert for personnel management
         notifications.push({
             id: notifId++,
             title: "Staffing Overview",
             description: "All regional managers have successfully clocked in for the evening shift.",
-            time: "2h ago",
+            timestamp: new Date(Date.now() - 1000 * 60 * 85).toISOString(), // 85 mins ago
             type: "info"
         });
 
@@ -72,7 +71,7 @@ router.get('/notifications', async (req, res) => {
             id: notifId++,
             title: "AI Forecast: Surge Predicted",
             description: "Machine learning predicts a 35% surge in delivery orders tomorrow due to local events.",
-            time: "4h ago",
+            timestamp: new Date(Date.now() - 1000 * 60 * 312).toISOString(), // ~5 hours ago
             type: "success"
         });
         
@@ -81,11 +80,10 @@ router.get('/notifications', async (req, res) => {
             id: notifId++,
             title: "System Health",
             description: "All branch POS terminals and inventory syncing services are online.",
-            time: "12h ago",
+            timestamp: new Date(Date.now() - 1000 * 60 * 1440).toISOString(), // 24 hours ago
             type: "info"
         });
 
-        // Ensure we only return a neat list of up to 5 or 6 notifications
         res.json(notifications.slice(0, 6));
     } catch (err) {
         console.error("Error generating notifications:", err);
