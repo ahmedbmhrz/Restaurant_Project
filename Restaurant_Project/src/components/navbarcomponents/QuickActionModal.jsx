@@ -14,7 +14,7 @@ export function QuickActionModal({ actionType, isOpen, onClose }) {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     
     useEffect(() => {
-        if (isOpen && (actionType === 'product' || actionType === 'staff')) {
+        if (isOpen && (actionType === 'product' || actionType === 'staff' || actionType === 'manager')) {
             fetchBranches();
         }
         setSelectedBranchId("");

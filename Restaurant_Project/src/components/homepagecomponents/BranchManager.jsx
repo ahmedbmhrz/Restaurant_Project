@@ -27,7 +27,15 @@ export function BranchManager() {
                 setLoading(false)
             }
         }
-        fetchManagers()
+        
+        fetchManagers();
+
+        const handleUpdate = () => fetchManagers();
+        window.addEventListener('quickActionComplete', handleUpdate);
+        
+        return () => {
+            window.removeEventListener('quickActionComplete', handleUpdate);
+        };
     }, [])
 
     return (
