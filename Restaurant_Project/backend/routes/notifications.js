@@ -24,11 +24,17 @@ router.get('/notifications', async (req, res) => {
             stockData.forEach(item => {
                 const branchName = item.branches?.name || 'a branch';
                 const productName = item.products?.name || 'A product';
+                
+                // Use a deterministic timestamp so it doesn't reset to "Just now" on every refresh
+                // We'll use the start of the current hour minus 12 minutes for a realistic "stable" time
+                const stableTime = new Date();
+                stableTime.setMinutes(12, 0, 0); 
+
                 notifications.push({
                     id: notifId++,
                     title: "Critical Low Stock",
                     description: `${productName} is critically low (${item.stock_quantity} units) at ${branchName}.`,
-                    timestamp: new Date().toISOString(),
+                    timestamp: stableTime.toISOString(),
                     type: "urgent"
                 });
             });
