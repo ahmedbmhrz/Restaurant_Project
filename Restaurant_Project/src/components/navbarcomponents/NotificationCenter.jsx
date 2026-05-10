@@ -9,6 +9,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useState, useEffect } from "react"
+import { formatTimeAgo } from "@/lib/utils"
 
 const typeConfig = {
     urgent: { icon: AlertCircle, color: "text-red-600", bg: "bg-red-100" },
@@ -20,20 +21,41 @@ const typeConfig = {
 export function NotificationCenter() {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [tick, setTick] = useState(0);
+
+    // Live update ticker (every minute)
+    useEffect(() => {
+        const interval = setInterval(() => setTick(t => t + 1), 60000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const fetchNotifications = async () => {
+        try {
+            const res = await fetch('http://localhost:5000/api/notifications');
+            const data = await res.json();
+            
+            const lastClear = localStorage.getItem('nexus_notifications_last_clear');
+            const filteredData = lastClear 
+                ? data.filter(n => new Date(n.timestamp) > new Date(lastClear))
+                : data;
+
+            setNotifications(filteredData);
+            setLoading(false);
+        } catch (err) {
+            console.error("Error fetching notifications:", err);
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchNotifications = async () => {
-            try {
-                const res = await fetch('http://localhost:5000/api/notifications');
-                const data = await res.json();
-                setNotifications(data);
-                setLoading(false);
-            } catch (err) {
-                console.error("Error fetching notifications:", err);
-                setLoading(false);
-            }
-        };
         fetchNotifications();
+
+        const handleGlobalAction = () => fetchNotifications();
+        window.addEventListener('quickActionComplete', handleGlobalAction);
+        
+        return () => {
+            window.removeEventListener('quickActionComplete', handleGlobalAction);
+        };
     }, []);
 
     return (
@@ -76,7 +98,7 @@ export function NotificationCenter() {
                                         <div className="flex-1 space-y-1">
                                             <div className="flex justify-between items-start">
                                                 <p className="text-sm font-bold text-slate-900 leading-tight">{n.title}</p>
-                                                <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap ml-2">{n.time}</span>
+                                                <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap ml-2">{formatTimeAgo(n.timestamp)}</span>
                                             </div>
                                             <p className="text-xs text-muted-foreground line-clamp-2">{n.description}</p>
                                         </div>

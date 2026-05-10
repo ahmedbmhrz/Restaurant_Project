@@ -2,6 +2,7 @@ import { Bell, AlertCircle, CheckCircle2, Info, Clock, ArrowRight } from 'lucide
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { NotificationsModal } from "../navbarcomponents/NotificationsModal"
+import { formatTimeAgo } from "@/lib/utils"
 
 const typeConfig = {
     urgent: { icon: AlertCircle, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/20" },
@@ -9,21 +10,6 @@ const typeConfig = {
     warning: { icon: Clock, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/20" },
     info: { icon: Info, color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
 }
-
-const formatTimeAgo = (timestamp) => {
-    if (!timestamp) return "Just now";
-    const now = new Date();
-    const past = new Date(timestamp);
-    const diffInMs = now - past;
-    const diffInMins = Math.floor(diffInMs / (1000 * 60));
-    
-    if (diffInMins < 1) return "Just now";
-    if (diffInMins < 60) return `${diffInMins}m ago`;
-    const diffInHours = Math.floor(diffInMins / 60);
-    if (diffInHours < 24) return `${diffInHours}h ago`;
-    const diffInDays = Math.floor(diffInHours / 24);
-    return `${diffInDays}d ago`;
-};
 
 export function Notification() {
     const [notifications, setNotifications] = useState([]);
