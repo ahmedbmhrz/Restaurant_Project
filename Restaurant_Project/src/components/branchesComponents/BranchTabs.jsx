@@ -10,7 +10,7 @@ import { Charts } from "./Charts"
 const tabTriggerClasses = "justify-start inline-flex items-center gap-3 text-slate-500 font-bold data-[state=active]:text-indigo-600 data-[state=active]:shadow-md data-[state=active]:bg-white transition-all duration-300 hover:text-slate-700 hover:bg-white/50 px-5 py-3 rounded-2xl w-full"
 const tabContentClasses = "mt-0 outline-none animate-in fade-in slide-in-from-left-4 duration-500 h-full"
 
-export function BranchTabs({ isFetching, pageData, fetchPageData }) {
+export function BranchTabs({ isFetching, pageData, fetchPageData, openHubTrigger }) {
     return (
         <Tabs defaultValue="branch" orientation="vertical" className="flex-1 flex min-h-0 bg-white/40 backdrop-blur-xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-3xl overflow-hidden h-full">
             
@@ -55,6 +55,7 @@ export function BranchTabs({ isFetching, pageData, fetchPageData }) {
                             staffList={pageData.operationalData.fullStaffList}
                             allUsers={pageData.operationalData.allUsers}
                             refreshData={fetchPageData}
+                            openHubTrigger={openHubTrigger}
                         />
                     </TabsContent>
                     <TabsContent value="manager" className={tabContentClasses}>

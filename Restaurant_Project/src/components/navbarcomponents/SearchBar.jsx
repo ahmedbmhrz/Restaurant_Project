@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react"
-import { Search, Store, User, Package, Loader2, ExternalLink } from "lucide-react"
+import { Search, Store, User, Package, Loader2, ExternalLink, Clock, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { useNavigate } from "react-router-dom"
 
@@ -12,6 +12,10 @@ export function SearchBar() {
     const [results, setResults] = useState({ branches: [], users: [], products: [] });
     const [isSearching, setIsSearching] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const [recentSearches, setRecentSearches] = useState(() => {
+        const saved = localStorage.getItem('nexus_recent_searches');
+        return saved ? JSON.parse(saved) : [];
+    });
     const wrapperRef = useRef(null);
     const navigate = useNavigate();
 
@@ -26,11 +30,15 @@ export function SearchBar() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [wrapperRef]);
 
+    // Save recent searches to local storage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('nexus_recent_searches', JSON.stringify(recentSearches));
+    }, [recentSearches]);
+
     // Debounced search effect
     useEffect(() => {
         if (!query || query.trim() === '') {
             setResults({ branches: [], users: [], products: [] });
-            setIsOpen(false);
             setIsSearching(false);
             return;
         }
@@ -59,6 +67,21 @@ export function SearchBar() {
         setIsOpen(false);
         setQuery("");
         
+        // Add to recent searches
+        const recentItem = {
+            id: item.id,
+            name: item.name || item.full_name,
+            type: type,
+            branch_id: item.branch_id,
+            role: item.role,
+            details: type === 'branch' ? item.address : type === 'user' ? item.role?.replace('_', ' ') : item.category
+        };
+
+        setRecentSearches(prev => {
+            const filtered = prev.filter(r => r.id !== recentItem.id);
+            return [recentItem, ...filtered].slice(0, 5);
+        });
+
         let targetBranchIdId = null;
         if (type === 'branch') {
             targetBranchIdId = item.id;
@@ -66,14 +89,23 @@ export function SearchBar() {
             targetBranchIdId = item.branch_id;
         }
 
+        const isRegularWorker = type === 'user' && item.role !== 'Branch_Manager' && item.role !== 'HQ_Admin';
+
         if (targetBranchIdId) {
-            navigate("/branches", { state: { targetBranchId: targetBranchIdId } });
+            navigate("/branches", { 
+                state: { 
+                    targetBranchId: targetBranchIdId,
+                    openManagementHub: isRegularWorker,
+                    targetUserId: type === 'user' ? item.id : null
+                } 
+            });
         } else {
             navigate("/branches");
         }
     };
 
     const hasResults = results.branches.length > 0 || results.users.length > 0 || results.products.length > 0;
+    const showDropdown = isOpen && (query.trim() !== '' || recentSearches.length > 0);
 
     return (
         <div className="flex-1 max-w-md hidden md:flex items-center relative z-50" ref={wrapperRef}>
@@ -84,9 +116,7 @@ export function SearchBar() {
                     placeholder="Search branches, staff, or products..."
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    onFocus={() => {
-                        if (query.trim() !== '') setIsOpen(true);
-                    }}
+                    onFocus={() => setIsOpen(true)}
                     className="pl-10 pr-16 bg-muted/20 border-muted-foreground/20 focus-visible:ring-primary focus-visible:bg-background transition-all rounded-xl w-full"
                 />
                 
@@ -102,21 +132,62 @@ export function SearchBar() {
             </div>
 
             {/* Dropdown Results */}
-            {isOpen && query.trim() !== '' && (
+            {showDropdown && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-xl border border-slate-200/60 shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-top-2">
-                    {isSearching && !hasResults ? (
-                        <div className="p-4 text-center text-xs font-bold text-slate-400 py-8 flex flex-col items-center gap-2">
-                            <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
-                            Searching database...
+                    
+                    {/* Recent Searches (when query is empty) */}
+                    {query.trim() === '' && recentSearches.length > 0 && (
+                        <div className="max-h-[60vh] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-slate-200">
+                            <div className="flex items-center justify-between px-3 pb-2 pt-1">
+                                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Recent Searches</h3>
+                                <button 
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setRecentSearches([]);
+                                    }}
+                                    className="text-[10px] font-bold text-slate-400 hover:text-red-500 transition-colors"
+                                >
+                                    Clear
+                                </button>
+                            </div>
+                            <div className="space-y-1">
+                                {recentSearches.map((recent, idx) => (
+                                    <div 
+                                        key={`${recent.id}-${idx}`}
+                                        onClick={() => handleResultClick(recent.type, recent)}
+                                        className="flex items-center justify-between p-2 hover:bg-slate-50 rounded-xl cursor-pointer group transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-1.5 rounded-lg bg-slate-100 text-slate-500 group-hover:scale-110 transition-transform">
+                                                <Clock className="h-4 w-4" />
+                                            </div>
+                                            <div>
+                                                <div className="text-sm font-bold text-slate-700">{recent.name}</div>
+                                                <div className="text-[10px] text-slate-400">{recent.details}</div>
+                                            </div>
+                                        </div>
+                                        <ExternalLink className="h-3 w-3 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                    ) : !hasResults ? (
-                        <div className="p-4 text-center text-xs font-bold text-slate-400 py-8">
-                            No results found for "{query}"
-                        </div>
-                    ) : (
-                        <div className="max-h-[60vh] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-slate-200 space-y-4">
-                            
-                            {/* Branches Section */}
+                    )}
+
+                    {/* Active Search Results */}
+                    {query.trim() !== '' && (
+                        isSearching && !hasResults ? (
+                            <div className="p-4 text-center text-xs font-bold text-slate-400 py-8 flex flex-col items-center gap-2">
+                                <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
+                                Searching database...
+                            </div>
+                        ) : !hasResults ? (
+                            <div className="p-4 text-center text-xs font-bold text-slate-400 py-8">
+                                No results found for "{query}"
+                            </div>
+                        ) : (
+                            <div className="max-h-[60vh] overflow-y-auto p-2 scrollbar-thin scrollbar-thumb-slate-200 space-y-4">
+                                
+                                {/* Branches Section */}
                             {results.branches.length > 0 && (
                                 <div>
                                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-3 pb-2 pt-1">Branches</h3>
@@ -201,9 +272,10 @@ export function SearchBar() {
                                 </div>
                             )}
                         </div>
-                    )}
-                </div>
-            )}
+                    )
+                )}
+            </div>
+        )}
         </div>
     );
 }

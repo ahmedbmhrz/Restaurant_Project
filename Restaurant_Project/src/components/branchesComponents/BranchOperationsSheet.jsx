@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Separator } from "@/components/ui/separator"
@@ -9,8 +10,23 @@ import { LeadershipSection } from "./branch_management/LeadershipSection"
 import { StaffingSection } from "./branch_management/StaffingSection"
 import { EmergencyControls } from "./branch_management/EmergencyControls"
 
-export function BranchOperationsSheet({ data, allBranches = [], staffList = [], allUsers = [], refreshData }) {
-    
+export function BranchOperationsSheet({ data, allBranches = [], staffList = [], allUsers = [], refreshData, openHubTrigger }) {
+    const [isOpen, setIsOpen] = useState(false);
+
+    useEffect(() => {
+        if (openHubTrigger) {
+            setIsOpen(true);
+            
+            // Optionally scroll to staffing section after a small delay to allow sheet to render
+            setTimeout(() => {
+                const staffingHeader = document.getElementById("staffing-section-header");
+                if (staffingHeader) {
+                    staffingHeader.scrollIntoView({ behavior: 'smooth' });
+                }
+            }, 500);
+        }
+    }, [openHubTrigger]);
+
     const handleUpdateBranch = async (payload) => {
         try {
             const res = await fetch(`http://localhost:5000/api/branches/${data.id}`, {
@@ -40,7 +56,7 @@ export function BranchOperationsSheet({ data, allBranches = [], staffList = [], 
     if (!data) return null;
 
     return (
-        <Sheet>
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
                 <Button
                     className="w-full transition-all duration-300 hover:gap-3 group/btn font-bold h-12 rounded-2xl"

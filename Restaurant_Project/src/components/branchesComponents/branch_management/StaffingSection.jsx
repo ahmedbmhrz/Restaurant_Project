@@ -14,7 +14,7 @@ export function StaffingSection({ staffList, allBranches, onTransfer, branchId, 
     };
 
     return (
-        <div className="space-y-6">
+        <div id="staffing-section-header" className="space-y-6 scroll-mt-6">
             <StaffHeader
                 count={staffList.length}
                 isAdding={isAdding}

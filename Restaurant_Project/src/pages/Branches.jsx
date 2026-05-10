@@ -8,12 +8,16 @@ function Branches() {
     const location = useLocation();
     const [pageData, setPageData] = useState(null);
     const [selectedBranchId, setSelectedBranchId] = useState(location.state?.targetBranchId || null);
+    const [openHubTrigger, setOpenHubTrigger] = useState(location.state?.openManagementHub ? Date.now() : null);
     const [isFetching, setIsFetching] = useState(false);
 
     // Update selected branch if navigation state changes while on page
     useEffect(() => {
         if (location.state?.targetBranchId) {
             setSelectedBranchId(location.state.targetBranchId);
+        }
+        if (location.state?.openManagementHub) {
+            setOpenHubTrigger(Date.now()); // Use timestamp to force re-trigger if clicked again
         }
     }, [location.state]);
 
@@ -92,6 +96,7 @@ function Branches() {
                             isFetching={isFetching} 
                             pageData={pageData} 
                             fetchPageData={fetchPageData} 
+                            openHubTrigger={openHubTrigger}
                         />
                     </div>
                     
