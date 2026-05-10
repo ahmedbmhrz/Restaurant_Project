@@ -1,11 +1,19 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Users, ChevronRight } from "lucide-react"
 
 export function BranchManager() {
+    const navigate = useNavigate();
     const [managers, setManagers] = useState([])
     const [loading, setLoading] = useState(true)
+
+    const handleManagerClick = (manager) => {
+        if (manager.branch_id) {
+            navigate("/branches", { state: { targetBranchId: manager.branch_id } });
+        }
+    };
 
     useEffect(() => {
         const fetchManagers = async () => {
@@ -51,6 +59,7 @@ export function BranchManager() {
                         managers.map((manager) => (
                             <div 
                                 key={manager.id} 
+                                onClick={() => handleManagerClick(manager)}
                                 className="group flex items-center justify-between p-3 rounded-2xl bg-white/60 hover:bg-white border border-white/60 hover:border-primary/20 hover:shadow-md transition-all cursor-pointer shrink-0"
                             >
                                 <div className="flex items-center gap-4">
