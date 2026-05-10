@@ -63,7 +63,7 @@ export function QuickActionModal({ actionType, isOpen, onClose }) {
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="sm:max-w-md bg-white/95 backdrop-blur-xl border-white/40 shadow-2xl rounded-3xl p-0">
+            <DialogContent className="sm:max-w-3xl bg-white/95 backdrop-blur-xl border-white/40 shadow-2xl rounded-3xl p-0">
                 <div className="p-8 pb-4 border-b border-slate-100">
                     <DialogHeader>
                         <div className="flex items-center gap-3 mb-2">
@@ -105,7 +105,7 @@ export function QuickActionModal({ actionType, isOpen, onClose }) {
                                     <Loader2 className="h-4 w-4 animate-spin" /> Loading branches...
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-2 gap-3 max-h-[140px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200">
+                                <div className="grid grid-cols-3 gap-3 max-h-[220px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200">
                                     {branches.map(b => (
                                         <div
                                             key={b.id}
