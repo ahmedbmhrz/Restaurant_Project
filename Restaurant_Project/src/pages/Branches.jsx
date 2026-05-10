@@ -2,11 +2,20 @@ import { Navbar } from "@/components/Navbar"
 import { ManagersnBranch } from "../components/branchesComponents/ManagersnBranch"
 import { BranchTabs } from "../components/branchesComponents/BranchTabs"
 import { useState, useEffect } from "react"
+import { useLocation } from "react-router-dom"
 
 function Branches() {
+    const location = useLocation();
     const [pageData, setPageData] = useState(null);
-    const [selectedBranchId, setSelectedBranchId] = useState(null);
+    const [selectedBranchId, setSelectedBranchId] = useState(location.state?.targetBranchId || null);
     const [isFetching, setIsFetching] = useState(false);
+
+    // Update selected branch if navigation state changes while on page
+    useEffect(() => {
+        if (location.state?.targetBranchId) {
+            setSelectedBranchId(location.state.targetBranchId);
+        }
+    }, [location.state]);
 
     const fetchPageData = async () => {
         setIsFetching(true);

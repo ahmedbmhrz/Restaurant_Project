@@ -9,6 +9,7 @@ import productsRouter from './routes/products.js';
 import usersRouter from './routes/users.js';
 import predictionsRouter from './routes/predictions.js';
 import notificationsRouter from './routes/notifications.js';
+import searchRouter from './routes/search.js';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api', productsRouter); // Handles /api/products and /api/branch-stock
 app.use('/api', usersRouter);    // Handles /api/users, /api/branch-managers, /api/users/:id/branch
 app.use('/api', notificationsRouter); // Handles /api/notifications
 app.use('/api/predict', predictionsRouter); // Handles /api/predict/sales-forecast and /api/predict/busy-hours
+app.use('/api/search', searchRouter);
 
 // Start the server
 app.listen(PORT, () => {
