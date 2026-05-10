@@ -17,7 +17,7 @@ export function QuickActionModal({ actionType, isOpen, onClose }) {
         if (isOpen && (actionType === 'product' || actionType === 'staff' || actionType === 'manager')) {
             fetchBranches();
         }
-        setSelectedBranchId("");
+        setSelectedBranchId(null);
     }, [isOpen, actionType]);
 
     const fetchBranches = async () => {
@@ -26,9 +26,6 @@ export function QuickActionModal({ actionType, isOpen, onClose }) {
             const res = await fetch("http://localhost:5000/api/");
             const data = await res.json();
             setBranches(data);
-            if (data.length > 0) {
-                setSelectedBranchId(data[0].id);
-            }
         } catch (error) {
             console.error("Failed to fetch branches:", error);
         } finally {
@@ -90,7 +87,19 @@ export function QuickActionModal({ actionType, isOpen, onClose }) {
                     {/* Branch Selector for context-dependent actions */}
                     {(actionType === 'product' || actionType === 'staff' || actionType === 'manager') && (
                         <div className="space-y-2">
-                            <Label className="text-[11px] font-bold uppercase opacity-70 ml-1">Target Branch</Label>
+                            <div className="flex justify-between items-center px-1">
+                                <Label className="text-[11px] font-bold uppercase opacity-70">Target Branch</Label>
+                                <button 
+                                    onClick={() => setSelectedBranchId(null)}
+                                    className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md transition-all ${
+                                        selectedBranchId === null 
+                                            ? 'bg-indigo-600 text-white shadow-sm' 
+                                            : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                                    }`}
+                                >
+                                    Unassigned
+                                </button>
+                            </div>
                             {isLoadingBranches ? (
                                 <div className="h-12 border border-slate-200 rounded-xl flex items-center px-4 gap-3 text-sm font-medium text-slate-500 bg-white">
                                     <Loader2 className="h-4 w-4 animate-spin" /> Loading branches...
@@ -134,12 +143,12 @@ export function QuickActionModal({ actionType, isOpen, onClose }) {
                         {actionType === 'product' && selectedBranchId && (
                             <AddProductForm branchId={selectedBranchId} onAddComplete={handleSuccess} />
                         )}
-                        {actionType === 'staff' && selectedBranchId && (
+                        {(actionType === 'staff') && (
                             <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
                                 <HireStaffForm branchId={selectedBranchId} onSuccess={handleSuccess} />
                             </div>
                         )}
-                        {actionType === 'manager' && selectedBranchId && (
+                        {(actionType === 'manager') && (
                             <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
                                 <HireStaffForm branchId={selectedBranchId} onSuccess={handleSuccess} defaultRole="Branch_Manager" lockedRole={true} />
                             </div>
