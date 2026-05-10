@@ -4,8 +4,7 @@ import Branches from "./pages/Branches"
 import AIPrediction from "./pages/AIPrediction"
 import Login from "./pages/Login"
 import Signup from "./pages/Signup"
-
-
+import { POSPage } from "./pages/POS"
 
 import { TooltipProvider } from "@/components/ui/tooltip"
 
@@ -20,7 +19,7 @@ function App() {
           <Route path="/ai-prediction" element={<AIPrediction />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-
+          <Route path="/pos" element={<POSPage />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
