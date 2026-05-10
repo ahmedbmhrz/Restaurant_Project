@@ -6,7 +6,10 @@ import { useLocation } from "react-router-dom"
 
 function Branches() {
     const location = useLocation();
-    const [pageData, setPageData] = useState(null);
+    const [pageData, setPageData] = useState(() => {
+        const cached = localStorage.getItem('nexus_dashboard_cache');
+        return cached ? JSON.parse(cached) : null;
+    });
     const [selectedBranchId, setSelectedBranchId] = useState(location.state?.targetBranchId || null);
     const [openHubTrigger, setOpenHubTrigger] = useState(location.state?.openManagementHub ? Date.now() : null);
     const [isFetching, setIsFetching] = useState(false);
@@ -39,10 +42,13 @@ function Branches() {
                 };
             });
 
-            setPageData({
+            const newPageData = {
                 ...data,
                 managers: formattedManagers
-            });
+            };
+
+            setPageData(newPageData);
+            localStorage.setItem('nexus_dashboard_cache', JSON.stringify(newPageData));
         } catch (error) {
             console.error("Error loading branch page data:", error);
         } finally {
