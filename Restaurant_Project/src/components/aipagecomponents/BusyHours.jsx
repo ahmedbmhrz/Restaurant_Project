@@ -9,7 +9,7 @@ import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer, Cell } from "recharts
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 import { useState, useEffect } from "react"
 
-export function BusyHours({ selectedBranch = "all" }) {
+export function BusyHours({ selectedBranch = "all", branchName = "All Branches" }) {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -80,10 +80,6 @@ export function BusyHours({ selectedBranch = "all" }) {
         fetchBusyHours();
     }, [selectedBranch, timeframe]);
 
-    const branchText = selectedBranch === "all"
-        ? "Aggregate View"
-        : `Branch ${selectedBranch}`;
-
     if (loading) {
         return (
             <Card className="flex-1">
@@ -106,7 +102,7 @@ export function BusyHours({ selectedBranch = "all" }) {
                 <div>
                     <CardTitle>Predicted Busy {timeframe === 'hour' ? 'Hours' : 'Days'}</CardTitle>
                     <CardDescription>
-                        Density prediction for: <span className="font-semibold text-teal-600">{branchText}</span>
+                        Density prediction for: <span className="font-semibold text-teal-600">{branchName}</span>
                         {error && <span className="text-red-500 ml-2">(Using fallback data)</span>}
                     </CardDescription>
                 </div>

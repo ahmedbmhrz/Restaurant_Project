@@ -7,7 +7,7 @@ import {
 import { Sparkles, TrendingUp, Users, ShoppingBag, AlertTriangle, DollarSign } from "lucide-react"
 import { useState, useEffect } from "react"
 
-export function AIRecommendations({ selectedBranch = "all" }) {
+export function AIRecommendations({ selectedBranch = "all", branchName = "All Branches" }) {
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -108,7 +108,7 @@ export function AIRecommendations({ selectedBranch = "all" }) {
                 <div className="flex items-center gap-2 mb-2">
                     <Sparkles className="h-6 w-6 text-teal-500 fill-teal-500/20" />
                     <h2 className="text-xl font-bold text-slate-800">
-                        {selectedBranch === "all" ? "Global Insights" : `Insights for Branch ${selectedBranch}`}
+                        {selectedBranch === "all" ? "Global Insights" : `Insights for ${branchName}`}
                     </h2>
                 </div>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
@@ -121,7 +121,7 @@ export function AIRecommendations({ selectedBranch = "all" }) {
             <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-6 w-6 text-teal-500 fill-teal-500/20" />
                 <h2 className="text-xl font-bold text-slate-800">
-                    {selectedBranch === "all" ? "Global Insights" : `Insights for Branch ${selectedBranch}`}
+                    {selectedBranch === "all" ? "Global Insights" : `Insights for ${branchName}`}
                     {error && <span className="text-red-500 text-sm ml-2">(Fallback: {error})</span>}
                 </h2>
             </div>

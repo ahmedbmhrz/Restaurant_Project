@@ -10,7 +10,7 @@ import { Line, LineChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer } fro
 import { useState, useEffect } from "react"
 import { TrendingUp } from "lucide-react"
 
-export function SalesForecast({ selectedBranch = "all" }) {
+export function SalesForecast({ selectedBranch = "all", branchName = "All Branches" }) {
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -108,7 +108,7 @@ export function SalesForecast({ selectedBranch = "all" }) {
                         Sales Forecast
                     </CardTitle>
                     <CardDescription>
-                        Revenue performance for: <span className="font-semibold text-teal-700">{selectedBranch === "all" ? "All Branches" : `Branch ${selectedBranch}`}</span>
+                        Revenue performance for: <span className="font-semibold text-teal-700">{branchName}</span>
                     </CardDescription>
                 </div>
                 <select 
