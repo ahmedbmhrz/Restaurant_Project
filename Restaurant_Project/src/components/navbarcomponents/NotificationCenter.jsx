@@ -31,12 +31,20 @@ export function NotificationCenter() {
 
     const fetchNotifications = async () => {
         try {
-            const res = await fetch('http://localhost:5000/api/notifications');
+            // Use relative path so it works across different environments/IPs
+            const res = await fetch('/api/notifications');
             const data = await res.json();
             
+            // Filtering logic: only show notifications that haven't been 'cleared'
+            // We use the last clear timestamp to filter out old news
             const lastClear = localStorage.getItem('nexus_notifications_last_clear');
             const filteredData = lastClear 
-                ? data.filter(n => new Date(n.timestamp) > new Date(lastClear))
+                ? data.filter(n => {
+                    // If the notification is very recent (within last 2 mins), always show it
+                    // even if it's slightly before the 'clear' time, to account for clock drift
+                    const isNew = (new Date() - new Date(n.timestamp)) < 120000;
+                    return isNew || new Date(n.timestamp) > new Date(lastClear);
+                })
                 : data;
 
             setNotifications(filteredData);
