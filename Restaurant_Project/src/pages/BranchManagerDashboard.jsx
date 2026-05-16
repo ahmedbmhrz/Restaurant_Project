@@ -67,14 +67,37 @@ export default function BranchManagerDashboard() {
                 setRecentOrders([]);
             }
 
-            // 4. Get All Staff (TESTING: Removed Active Status Filter)
-            const { data: shifts } = await supabase
-                .from('employee_shifts')
-                .select('clock_in, users(full_name, role, avatar_url)')
-                .eq('branch_id', branchId);
+            // 4. Get All Team Members for this branch
+            const { data: teamMembers } = await supabase
+                .from('users')
+                .select('id, full_name, role, avatar_url')
+                .eq('branch_id', branchId)
+                .neq('role', 'Branch Manager'); // Still filtering out manager
                 
-            if (shifts && shifts.length > 0) {
-                setOnDutyStaff(shifts);
+            // Also get currently active shifts to mark who is "In"
+            const { data: activeShifts } = await supabase
+                .from('employee_shifts')
+                .select('user_id, clock_in, status')
+                .eq('branch_id', branchId)
+                .eq('status', 'Active');
+
+            if (teamMembers && teamMembers.length > 0) {
+                // Robust filter: Hide anyone with "manager" in their role name
+                const staffOnly = teamMembers.filter(member => {
+                    const role = (member.role || '').toLowerCase();
+                    return !role.includes('manager');
+                });
+
+                // Merge staff with their active shift status
+                const mergedStaff = staffOnly.map(member => {
+                    const activeShift = activeShifts?.find(s => s.user_id === member.id);
+                    return {
+                        users: member,
+                        status: activeShift ? 'Active' : 'Off Duty',
+                        clock_in: activeShift?.clock_in || null
+                    };
+                });
+                setOnDutyStaff(mergedStaff);
             } else {
                 setOnDutyStaff([]);
             }
@@ -123,12 +146,14 @@ export default function BranchManagerDashboard() {
                     
                     {/* Left Column (Recent Orders + Alerts) */}
                     <div className="lg:col-span-2 flex flex-col gap-6">
-                        <RecentOrders recentOrders={recentOrders} />
+                        <div className="h-[600px]">
+                            <RecentOrders recentOrders={recentOrders} />
+                        </div>
                         <InventoryAlerts inventoryAlerts={inventoryAlerts} />
                     </div>
 
                     {/* Right Column (Staff) */}
-                    <div className="flex flex-col h-[600px] lg:h-auto">
+                    <div className="h-[600px]">
                         <StaffOnDuty onDutyStaff={onDutyStaff} />
                     </div>
 
