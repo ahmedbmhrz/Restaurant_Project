@@ -16,20 +16,15 @@ const router = express.Router();
  */
 router.get('/', async (req, res) => {
     try {
-        // Fetch all branches
-        const { data: branches, error: bError } = await supabase
-            .from('branches')
-            .select('*');
+        const { data: branches, error: bError } = await supabase.from('branches').select('*');
         if (bError) throw bError;
 
-        // Fetch all branch managers (checking for both 'Branch_Manager' and 'Manager' roles)
         const { data: managers, error: mError } = await supabase
             .from('users')
             .select('id, full_name, role, branch_id')
             .in('role', ['Branch_Manager', 'Manager']);
         if (mError) throw mError;
         
-        // Merge data
         const transformedData = branches.map(branch => {
             const manager = (managers || []).find(m => m.branch_id === branch.id);
             return {
@@ -47,7 +42,6 @@ router.get('/', async (req, res) => {
 
 /**
  * POST /api/
- * Creates a new branch in the system.
  */
 router.post('/', async (req, res) => {
     const { name, address, description } = req.body;
@@ -56,7 +50,6 @@ router.post('/', async (req, res) => {
             .from('branches')
             .insert([{ name, address, description }])
             .select();
-        
         if (error) throw error;
         res.json(data[0]);
     } catch (err) {
@@ -66,8 +59,6 @@ router.post('/', async (req, res) => {
 
 /**
  * PATCH /api/:id
- * Updates specific profile details for a target branch ID.
- * Body: { name, address, description }
  */
 router.patch('/:id', async (req, res) => {
     const { id } = req.params;
@@ -87,135 +78,113 @@ router.patch('/:id', async (req, res) => {
 
 /**
  * GET /api/branches-page-data
- * THE ANALYTICS ENGINE
- * This massive endpoint assembles a "snapshot" of a branch's entire state.
- * It combines data from: branches, orders, products, order_items, employee_shifts, and users.
  */
 router.get('/branches-page-data', async (req, res) => {
     try {
         const branchId = req.query.branchId || req.query.branch;
 
         // --- STEP 1: INITIAL DATA FETCHING ---
-
-        // Fetch all managers to populate the sidebar/navigator
         const { data: managers, error: managerError } = await supabase
             .from('users')
             .select('*, branches(name)')
             .in('role', ['Branch_Manager', 'Manager']);
         if (managerError) throw managerError;
 
-        // Resolve which branch to focus on (either requested ID or the first manager's branch)
         const targetBranchId = branchId || (managers && managers.length > 0 ? managers[0].branch_id : "11111111-1111-1111-1111-111111111111");
 
-        // Fetch all branch metadata (required for the relocation / transfer dropdowns)
         const { data: allDbBranches, error: allBranchError } = await supabase.from('branches').select('*');
         if (allBranchError) throw allBranchError;
 
-        // Isolate the core "focus" branch for this dashboard session
         const targetBranch = (allDbBranches || []).find(b => b.id === targetBranchId) || (allDbBranches?.[0]);
-        const branches = targetBranch ? [targetBranch] : [];
-
-        // Fetch filtered business data for the target branch
+        
         let ordersQuery = supabase.from('orders').select('*');
         if (targetBranchId) ordersQuery = ordersQuery.eq('branch_id', targetBranchId);
         const { data: orders } = await ordersQuery;
 
-        // Fetch all product metadata for menu calculations
         const { data: products } = await supabase.from('products').select('*');
         const { data: orderItems } = await supabase.from('order_items').select('*');
 
-        // Fetch recent staffing events for the live feed
-        let shiftsQuery = supabase.from('employee_shifts').select('*').order('created_at', { ascending: false }).limit(5);
+        let shiftsQuery = supabase.from('employee_shifts').select('*').order('created_at', { ascending: false }).limit(10);
         if (targetBranchId) shiftsQuery = shiftsQuery.eq('branch_id', targetBranchId);
         const { data: shifts } = await shiftsQuery;
 
-        // Safety wrappers to prevent crashed loops on empty database states
         const safeOrders = orders || [];
         const safeProducts = products || [];
         const safeShifts = shifts || [];
         
-        // Filter order line items to match the targeted branch's orders
         const orderIds = new Set(safeOrders.map(o => o.id));
         const safeOrderItems = (orderItems || []).filter(item => orderIds.has(item.order_id));
 
-        // --- STEP 2: REVENUE & FINANCIAL CALCULATIONS ---
+        // --- STEP 2: REVENUE & TRENDS ---
+        const today = new Date();
+        const startOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const startOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59);
+
+        const currentMonthTotal = safeOrders
+            .filter(o => new Date(o.created_at) >= startOfThisMonth)
+            .reduce((sum, o) => sum + (o.total_amount || 0), 0);
+
+        const lastMonthTotal = safeOrders
+            .filter(o => {
+                const d = new Date(o.created_at);
+                return d >= startOfLastMonth && d <= endOfLastMonth;
+            })
+            .reduce((sum, o) => sum + (o.total_amount || 0), 0);
 
         const totalIncome = safeOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0);
         const totalTax = safeOrders.reduce((sum, o) => sum + (o.tax_amount || 0), 0);
         const totalTips = safeOrders.reduce((sum, o) => sum + (o.tip_amount || 0), 0);
         const netProfit = totalIncome - totalTax - totalTips;
 
-        // Build a 7-day trailing history array for the sparkline charts
         const historyDays = [];
         for (let i = 6; i >= 0; i--) {
             const d = new Date();
             d.setDate(d.getDate() - i);
             const dayLabel = d.toLocaleDateString('en-US', { weekday: 'short' });
             const dayKey = d.toISOString().split('T')[0];
-            
             const dayTotal = safeOrders
                 .filter(o => o.created_at && o.created_at.startsWith(dayKey))
                 .reduce((sum, o) => sum + (o.total_amount || 0), 0);
-                
             historyDays.push({ day: dayLabel, amount: dayTotal });
         }
+
+        const incomeTrend = lastMonthTotal > 0 
+            ? `${(((currentMonthTotal - lastMonthTotal) / lastMonthTotal) * 100).toFixed(1)}%` 
+            : currentMonthTotal > 0 ? "+100%" : "+0%";
 
         const incomeData = {
             total: totalIncome,
             currency: "$",
-            trend: totalIncome > 1000 ? "+12.5%" : "+0%", 
+            trend: incomeTrend, 
             history: historyDays,
             breakdown: [
-                { label: "Net Profit", value: `$${netProfit.toLocaleString()}`, color: "bg-emerald-500" },
-                { label: "Tax", value: `$${totalTax.toLocaleString()}`, color: "bg-blue-500" },
-                { label: "Tips/Fees", value: `$${totalTips.toLocaleString()}`, color: "bg-amber-500" }
+                { label: "Net Profit", value: `$${Math.round(netProfit).toLocaleString()}`, color: "bg-emerald-500" },
+                { label: "Tax", value: `$${Math.round(totalTax).toLocaleString()}`, color: "bg-blue-500" },
+                { label: "Tips/Fees", value: `$${Math.round(totalTips).toLocaleString()}`, color: "bg-amber-500" }
             ]
         };
 
-        // --- STEP 3: MENU & LOCAL INVENTORY AGGREGATION ---
-
-        const { data: allProducts } = await supabase.from('products').select('*');
-        const { data: branchStocks } = await supabase
-            .from('branch_stock')
-            .select('product_id, stock_quantity')
-            .eq('branch_id', targetBranchId);
-
-        // Map global products with local stock quantities
+        // --- STEP 3: MENU & INVENTORY ---
+        const { data: branchStocks } = await supabase.from('branch_stock').select('*').eq('branch_id', targetBranchId);
         const stockMap = {};
         (branchStocks || []).forEach(bs => (stockMap[bs.product_id] = bs.stock_quantity));
 
-        const localizedProducts = (allProducts || [])
+        const localizedProducts = safeProducts
             .filter(p => stockMap[p.id] !== undefined)
-            .map(p => ({
-                ...p,
-                stock_quantity: stockMap[p.id]
-            }));
+            .map(p => ({ ...p, stock_quantity: stockMap[p.id] }));
 
         const activeProducts = localizedProducts.filter(p => p.is_active);
-        const activeCount = activeProducts.length;
-        
-        // Logical "Inventory Health" score based on stock sufficiency
-        const totalHealthScore = activeProducts.reduce((sum, p) => {
-            if (p.stock_quantity > 10) return sum + 1; // Good
-            if (p.stock_quantity > 0) return sum + 0.5; // Low
-            return sum; // Critical
-        }, 0);
-
-        const healthPercentage = activeCount > 0 ? Math.round((totalHealthScore / activeCount) * 100) : 0;
         const outOfStockCount = activeProducts.filter(p => p.stock_quantity <= 0).length;
+        const totalHealthScore = activeProducts.reduce((sum, p) => p.stock_quantity > 10 ? sum + 1 : (p.stock_quantity > 0 ? sum + 0.5 : sum), 0);
+        const healthPercentage = activeProducts.length > 0 ? Math.round((totalHealthScore / activeProducts.length) * 100) : 0;
 
-        // Calculate popularity rankings for the menu highlight section
         const productSales = {};
-        safeOrderItems.forEach(item => {
-            productSales[item.product_id] = (productSales[item.product_id] || 0) + (item.quantity || 1);
-        });
-
-        const sortedProducts = [...localizedProducts]
-            .sort((a, b) => (productSales[b.id] || 0) - (productSales[a.id] || 0));
-
+        safeOrderItems.forEach(item => { productSales[item.product_id] = (productSales[item.product_id] || 0) + (item.quantity || 1); });
+        const sortedProducts = [...localizedProducts].sort((a, b) => (productSales[b.id] || 0) - (productSales[a.id] || 0));
         const topDish = sortedProducts[0] || {};
         const topItemsList = sortedProducts.slice(0, 3).map(p => ({
-            name: p.name || "Unknown Item",
+            name: p.name || "Item",
             orders: productSales[p.id] || 0,
             price: `$${(p.price || 0).toFixed(2)}`,
             status: productSales[p.id] > 5 ? "Best Seller" : "Trending",
@@ -225,7 +194,7 @@ router.get('/branches-page-data', async (req, res) => {
 
         const menuData = {
             stats: {
-                active: activeCount,
+                active: activeProducts.length,
                 outOfStock: outOfStockCount,
                 categories: [...new Set(localizedProducts.map(p => p.category_id || p.category))].filter(Boolean).length || 0,
                 health: `${healthPercentage}%`
@@ -233,7 +202,6 @@ router.get('/branches-page-data', async (req, res) => {
             highlightDish: {
                 name: topDish.name || "Menu Item",
                 price: topDish.price ? `$${(topDish.price).toFixed(2)}` : "$0.00",
-                rating: topDish.rating || 4.9,
                 orders: productSales[topDish.id] || 0,
                 image: topDish.image_url || "🍔"
             },
@@ -241,216 +209,99 @@ router.get('/branches-page-data', async (req, res) => {
             fullProductList: localizedProducts 
         };
 
-        // --- STEP 4: OPERATIONAL TRAFFIC & LIVE FEED ---
-
-        // Map hourly traffic counts (12 AM to 11 PM)
+        // --- STEP 4: TRAFFIC & FEED ---
         const trafficMap = {};
         for (let i = 0; i < 24; i++) {
-            const hour = i;
-            const formatted = hour >= 12 ? (hour === 12 ? `12 PM` : `${hour - 12} PM`) : (hour === 0 ? `12 AM` : `${hour} AM`);
+            const formatted = i >= 12 ? (i === 12 ? `12 PM` : `${i - 12} PM`) : (i === 0 ? `12 AM` : `${i} AM`);
             trafficMap[formatted] = 0;
         }
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
 
         safeOrders.forEach(o => {
-            const date = new Date(o.created_at);
-            const hour = date.getHours();
-            const formatted = hour >= 12 ? (hour === 12 ? `12 PM` : `${hour - 12} PM`) : (hour === 0 ? `12 AM` : `${hour} AM`);
-            trafficMap[formatted] = (trafficMap[formatted] || 0) + 1;
+            const orderDate = new Date(o.created_at);
+            if (orderDate >= startOfToday) {
+                const hour = orderDate.getHours();
+                const formatted = hour >= 12 ? (hour === 12 ? `12 PM` : `${hour - 12} PM`) : (hour === 0 ? `12 AM` : `${hour} AM`);
+                trafficMap[formatted]++;
+            }
         });
-
         const traffic = Object.keys(trafficMap).map(time => ({ time, count: trafficMap[time] }));
 
-        // Distribution of order types (Dine-in, Takeaway, Delivery)
         const deptMap = {};
-        safeOrders.forEach(o => {
-            const type = o.order_type || 'Takeaway';
-            deptMap[type] = (deptMap[type] || 0) + 1;
-        });
-        const totalDept = safeOrders.length || 1;
+        safeOrders.forEach(o => { const type = o.order_type || 'Takeaway'; deptMap[type] = (deptMap[type] || 0) + 1; });
         const departments = Object.keys(deptMap).map(type => ({
             name: type,
-            share: Math.round((deptMap[type] / totalDept) * 100),
+            share: Math.round((deptMap[type] / (safeOrders.length || 1)) * 100),
             growth: "+0%",
-            status: deptMap[type] > (totalDept / 2) ? "Peak" : "Optimal"
+            status: deptMap[type] > (safeOrders.length / 2) ? "Peak" : "Optimal"
         }));
 
-        // Assembly of the "Live Activity Feed" (Orders + Staff clock-ins)
-        const recentOrders = [...safeOrders]
-            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .slice(0, 5)
-            .map(o => ({
-                id: `order-${o.id}`,
+        const activity = [
+            ...safeOrders.map(o => ({
+                id: `o-${o.id}`,
                 type: "Order",
-                title: `Order $${(o.total_amount || 0).toFixed(2)}`,
+                title: `${o.order_type || 'New'} Order`,
+                description: `Invoice for $${(o.total_amount || 0).toLocaleString()} via ${o.payment_method || 'Credit Card'}`,
+                timestamp: new Date(o.created_at).getTime(),
                 time: getRelativeTime(o.created_at),
-                status: o.status === 'Completed' ? 'Success' : 'Pending'
-            }));
+                status: "Success"
+            })),
+            ...safeShifts.map(s => ({
+                id: `s-${s.id}`,
+                type: "Staff",
+                title: `Shift Update`,
+                description: `Personnel ${s.status === 'Active' ? 'Clocked In' : 'Clocked Out'} for duty`,
+                timestamp: new Date(s.clock_in).getTime(),
+                time: getRelativeTime(s.clock_in),
+                status: "Active"
+            }))
+        ].sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
 
-        const recentShifts = safeShifts.map(s => ({
-            id: `shift-${s.id}`,
-            type: "Staff",
-            title: `Staff ${s.status === 'Active' ? 'Clock-in' : 'Clock-out'}`,
-            time: getRelativeTime(s.clock_in),
-            status: s.status === 'Active' ? 'Active' : 'Neutral'
-        }));
+        const { count: activeStaffCount } = await supabase.from('employee_shifts').select('*', { count: 'exact', head: true }).is('clock_out', null).eq('branch_id', targetBranchId);
 
-        const activity = [...recentOrders, ...recentShifts]
-            .sort((a, b) => {
-                return a.id.startsWith('order') ? -1 : 1; 
-            })
-            .slice(0, 5);
-
-        const { count: activeStaffCount } = await supabase
-            .from('employee_shifts')
-            .select('*', { count: 'exact', head: true })
-            .is('clock_out', null);
-
-        // --- STEP 5: ADMINISTRATIVE PERSONNEL MANAGEMENT ---
-
-        const { data: branchStaff } = await supabase
-            .from('users')
-            .select('id, full_name, role, avatar_url, branch_id')
-            .eq('branch_id', targetBranchId);
-
-        const { data: allUsers } = await supabase
-            .from('users')
-            .select('id, full_name, role, branch_id');
+        const { data: branchStaff } = await supabase.from('users').select('*').eq('branch_id', targetBranchId);
+        const { data: allUsers } = await supabase.from('users').select('*');
 
         const operationalData = {
-            traffic: traffic,
-            departments: departments.length ? departments : [{ name: "General", share: 100, growth: "0%", status: "Optimal" }],
-            activity: activity.length ? activity : [{ id: 1, type: "System", title: "No recent activity", time: "Now", status: "Idle" }],
+            traffic, departments, activity,
             activeStaff: activeStaffCount || 0,
             fullStaffList: branchStaff || [],
             allUsers: allUsers || []
         };
 
-        const { count: staffCount } = await supabase.from('users').select('*', { count: 'exact', head: true }).eq('branch_id', targetBranchId);
-
-        // Generate enriched metadata for EVERY branch (needed for the administrative Navigator)
-        const enrichedAllBranches = (allDbBranches || []).map(b => ({
+        // --- STEP 5: ENRICHED DATA ---
+        const enrichedAllBranches = allDbBranches.map(b => ({
             ...b,
-            revenue: b.id === targetBranchId ? `$${(totalIncome || 0).toLocaleString()}` : "$0", 
-            staff: b.id === targetBranchId ? `${staffCount || 0} Active Staff` : "View Staff",
-            growth: "+0%",
-            description: b.description || "Premium dining location with excellent service and high continuous foot traffic globally.",
-            address: b.address || "Headquarters Building"
+            revenue: b.id === targetBranchId ? `$${totalIncome.toLocaleString()}` : "$0",
+            staff: b.id === targetBranchId ? `${branchStaff?.length || 0} Staff` : "View",
+            growth: b.id === targetBranchId ? incomeTrend : "+0%",
+            description: b.description || "Premium dining location.",
+            address: b.address || "Main Street"
         }));
 
-        const enrichedTargetBranches = enrichedAllBranches.filter(b => b.id === targetBranchId);
-
-        // Build detailed Manager Profile Cards with automated metrics
-        const enrichedManagers = await Promise.all((managers || []).map(async m => {
-            const name = m.full_name || m.name || 'Branch Manager';
-            const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'BM';
-
-            // Calculate tenure based on hire date
-            const hireDate = new Date(m.hire_date || m.created_at || new Date());
+        const enrichedManagers = await Promise.all(managers.map(async m => {
+            const hireDate = new Date(m.hire_date || m.created_at);
             const diffDays = Math.max(0, Math.floor((new Date() - hireDate) / (1000 * 60 * 60 * 24)));
-            const years = Math.floor(diffDays / 365);
-            const months = Math.floor((diffDays % 365) / 30);
-            let tenureStr = 'New Hire';
-            if (years > 0) tenureStr = `${years} Year${years > 1 ? 's' : ''}`;
-            else if (months > 0) tenureStr = `${months} Month${months > 1 ? 's' : ''}`;
-            else if (diffDays > 0) tenureStr = `${diffDays} Day${diffDays > 1 ? 's' : ''}`;
-
-            // Check current "Shift Status" and last activity
-            const { data: shiftData } = await supabase
-                .from('employee_shifts')
-                .select('*')
-                .eq('user_id', m.id)
-                .order('clock_in', { ascending: false })
-                .limit(4);
-            
-            const lastShift = shiftData?.[0];
-            let lastActiveStr = 'Never';
-            let statusStr = 'Offline';
-
-            if (lastShift) {
-                lastActiveStr = lastShift.clock_in ? new Date(lastShift.clock_in).toLocaleString() : 'Unknown';
-                statusStr = lastShift.clock_out ? 'Offline' : 'On Duty';
-            }
-
-            // High-precision month-over-month (MoM) growth comparison
-            const today = new Date();
-            const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
-            const prevMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1).toISOString();
-            const prevMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59).toISOString();
-
-            const { data: currentMonthOrders } = await supabase.from('orders').select('total_amount').eq('branch_id', m.branch_id).gte('created_at', currentMonthStart);
-            const { data: prevMonthOrders } = await supabase.from('orders').select('total_amount').eq('branch_id', m.branch_id).gte('created_at', prevMonthStart).lte('created_at', prevMonthEnd);
-
-            const currentTotal = currentMonthOrders?.reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0;
-            const prevTotal = prevMonthOrders?.reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0;
-
-            let calcGrowth = 0;
-            if (prevTotal > 0) {
-                calcGrowth = ((currentTotal - prevTotal) / prevTotal) * 100;
-            } else if (currentTotal > 0) {
-                calcGrowth = 12.5 + (name.length % 8); 
-            } else {
-                // FALLBACK: If zero historical data, use a stable deterministic "mock" based on name length
-                calcGrowth = 3.2 + (name.length % 7) * 2.1;
-                if (name.length % 2 === 0) calcGrowth = -(calcGrowth / 2);
-            }
-
-            // Map numerical growth to qualitative "Performance" labels
-            let calcPerformance = 'Average';
-            if (calcGrowth > 12) calcPerformance = 'Top 10%';
-            else if (calcGrowth > 5) calcPerformance = 'Excellent';
-            else if (calcGrowth > 0) calcPerformance = 'Good';
-            else calcPerformance = 'Needs Improvement';
-
-            const { data: managerStaff } = await supabase
-                .from('users')
-                .select('id, full_name, role, avatar_url, branch_id')
-                .eq('branch_id', m.branch_id)
-                .neq('id', m.id) 
-                .limit(4);
-
-            const { count: managerStaffCount } = await supabase
-                .from('users')
-                .select('*', { count: 'exact', head: true })
-                .eq('branch_id', m.branch_id);
-
-            // Construct sparkline data points for revenue history visualizations
-            const revenueHistory = [
-                prevTotal * 0.8,
-                prevTotal * 1.1,
-                prevTotal * 0.9,
-                prevTotal,
-                currentTotal
-            ].map(v => Math.floor(v));
+            const tenureStr = diffDays > 365 ? `${Math.floor(diffDays/365)} Years` : `${Math.floor(diffDays/30)} Months`;
 
             return {
                 ...m,
-                name: name,
+                name: m.full_name,
                 branchName: m.branches?.name || 'Unassigned',
-                avatarSrc: m.avatar_url || undefined,
-                avatarFallback: initials,
-                role: m.role || 'Managing Director',
-                performance: calcPerformance,
+                avatarFallback: (m.full_name || 'BM').split(' ').map(n => n[0]).join('').toUpperCase(),
+                performance: incomeTrend.includes('-') ? 'Needs Review' : 'Good',
                 tenure: tenureStr,
-                growth: calcGrowth.toFixed(1),
-                currentRevenue: currentTotal,
-                prevRevenue: prevTotal,
-                recentShifts: shiftData || [],
-                lastActive: lastActiveStr,
-                status: statusStr,
-                email: `${name.toLowerCase().replace(' ', '.')}@restaurant.com`,
-                phone: `+90 (555) 000-${(m.id.substring(0, 4))}`,
-                staffCount: (managerStaffCount || 1) - 1, 
-                staffPreview: managerStaff || [],
-                revenueHistory: revenueHistory
-            }
+                growth: incomeTrend.replace('+', '').replace('%', ''),
+                revenueHistory: historyDays.map(d => d.amount)
+            };
         }));
 
-        // Final payload containing all dashboard contexts
         res.json({
-            allBranches: enrichedAllBranches, 
-            branchesFromDb: enrichedTargetBranches, 
+            allBranches: enrichedAllBranches,
+            branchesFromDb: enrichedAllBranches.filter(b => b.id === targetBranchId),
             managers: enrichedManagers,
-            targetBranchId, 
+            targetBranchId,
             incomeData,
             menuData,
             operationalData

@@ -29,7 +29,7 @@ export function BranchOperationsSheet({ data, allBranches = [], staffList = [], 
 
     const handleUpdateBranch = async (payload) => {
         try {
-            const res = await fetch(`http://localhost:5000/api/branches/${data.id}`, {
+            const res = await fetch(`/api/branches/${data.id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -42,7 +42,7 @@ export function BranchOperationsSheet({ data, allBranches = [], staffList = [], 
 
     const handleTransferStaff = async (userId, newBranchId, newRole = null) => {
         try {
-            await fetch(`http://localhost:5000/api/users/${userId}/branch`, {
+            await fetch(`/api/users/${userId}/branch`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ branch_id: newBranchId, role: newRole })

@@ -21,18 +21,19 @@ export const DashboardHeader = () => (
                 </div>
             </div>
 
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <div className="rounded-full bg-muted/50 p-2 text-muted-foreground/60 transition-colors hover:bg-indigo-500/10 hover:text-indigo-600 cursor-help">
-                            <Info className="h-4 w-4" />
-                        </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-popover/90 backdrop-blur-md border-indigo-500/20 text-[10px] font-medium max-w-[200px]">
-                        Aggregated real-time metrics across all terminal points and kitchen displays.
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <button className="rounded-full bg-muted/50 p-2 text-muted-foreground/60 transition-colors hover:bg-indigo-500/10 hover:text-indigo-600 cursor-help border-none outline-none">
+                        <Info className="h-4 w-4" />
+                    </button>
+                </TooltipTrigger>
+                <TooltipContent 
+                    side="top" 
+                    className="bg-slate-900 text-white border-none shadow-xl text-[10px] font-medium max-w-[200px] z-[100]"
+                >
+                    Aggregated real-time metrics across all terminal points and kitchen displays.
+                </TooltipContent>
+            </Tooltip>
         </div>
     </CardHeader>
 );

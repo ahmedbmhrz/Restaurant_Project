@@ -6,10 +6,7 @@ import { useLocation } from "react-router-dom"
 
 function Branches() {
     const location = useLocation();
-    const [pageData, setPageData] = useState(() => {
-        const cached = localStorage.getItem('nexus_dashboard_cache');
-        return cached ? JSON.parse(cached) : null;
-    });
+    const [pageData, setPageData] = useState(null); // Force fresh load to bypass old cache
     const [selectedBranchId, setSelectedBranchId] = useState(location.state?.targetBranchId || null);
     const [openHubTrigger, setOpenHubTrigger] = useState(location.state?.openManagementHub ? Date.now() : null);
     const [isFetching, setIsFetching] = useState(false);
@@ -28,8 +25,8 @@ function Branches() {
         setIsFetching(true);
         try {
             const url = selectedBranchId
-                ? `http://localhost:5000/api/branches-page-data?branchId=${selectedBranchId}`
-                : 'http://localhost:5000/api/branches-page-data';
+                ? `/api/branches-page-data?branchId=${selectedBranchId}`
+                : '/api/branches-page-data';
 
             const res = await fetch(url, { cache: 'no-store' });
             const data = await res.json();

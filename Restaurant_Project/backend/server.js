@@ -38,3 +38,4 @@ app.use('/api/search', searchRouter);
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
+// Triggered restart for data sync v2.0
