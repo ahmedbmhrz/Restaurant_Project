@@ -9,35 +9,66 @@ router.get('/income-branch-tracker', async (req, res) => {
         const { data: branches, error: branchError } = await supabase.from('branches').select('*');
         if (branchError) throw branchError;
 
-        const { data: orders, error: ordersError } = await supabase.from('orders').select('branch_id, total_amount, created_at');
+        // Calculate date ranges
+        const now = new Date();
+        const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+
+        // Fetch orders from the start of last month to now
+        const { data: orders, error: ordersError } = await supabase
+            .from('orders')
+            .select('branch_id, total_amount, created_at')
+            .gte('created_at', startOfLastMonth);
+            
         if (ordersError) throw ordersError;
 
-        // Group orders by branch and calculate total income
-        const branchIncomeMap = {};
-        orders.forEach(order => {
-            branchIncomeMap[order.branch_id] = (branchIncomeMap[order.branch_id] || 0) + (order.total_amount || 0);
+        // Group income by branch and month
+        const branchStats = {};
+        branches.forEach(b => {
+            branchStats[b.id] = { thisMonth: 0, lastMonth: 0 };
         });
 
-        const chartData = branches.map((b, i) => {
-            const shortName = b.name ? b.name.substring(0, 3).toUpperCase() : `B${i}`;
-            const actualIncome = branchIncomeMap[b.id] || 0;
-            const finalIncome = actualIncome > 0 ? actualIncome : 1200 + (b.name.length * 100);
-            const mockIncrease = `+${(10 + (b.name.length % 15))}%`;
+        orders.forEach(order => {
+            const orderDate = new Date(order.created_at);
+            const isThisMonth = orderDate >= new Date(startOfThisMonth);
+            const branchId = order.branch_id;
+
+            if (branchStats[branchId]) {
+                if (isThisMonth) {
+                    branchStats[branchId].thisMonth += (order.total_amount || 0);
+                } else {
+                    branchStats[branchId].lastMonth += (order.total_amount || 0);
+                }
+            }
+        });
+
+        const chartData = branches.map((b) => {
+            const shortName = b.name ? b.name.substring(0, 3).toUpperCase() : "BRH";
+            const current = branchStats[b.id].thisMonth;
+            const previous = branchStats[b.id].lastMonth;
+            
+            // Calculate real percentage increase
+            let increase = "0%";
+            if (previous > 0) {
+                const pct = ((current - previous) / previous) * 100;
+                increase = `${pct >= 0 ? '+' : ''}${Math.round(pct)}%`;
+            } else if (current > 0) {
+                increase = "+100%"; // First sales this month
+            }
 
             return {
                 id: b.id,
                 branchName: shortName,
                 fullName: b.name,
-                income: finalIncome,
-                increase: mockIncrease
+                income: Math.round(current),
+                increase: increase
             };
         });
 
-        const top5Branches = chartData
-            .sort((a, b) => b.income - a.income)
-            .slice(0, 5);
+        // Return all branches, sorted by income
+        const sortedData = chartData.sort((a, b) => b.income - a.income);
 
-        res.json(top5Branches);
+        res.json(sortedData);
     } catch (err) {
         console.error("Error in income-branch-tracker:", err);
         res.status(500).json({ error: err.message });

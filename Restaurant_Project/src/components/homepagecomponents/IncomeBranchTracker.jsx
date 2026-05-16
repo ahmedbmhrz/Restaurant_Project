@@ -19,7 +19,7 @@ export function IncomeBranchTracker() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/stats/income-branch-tracker')
+                const res = await fetch('/api/stats/income-branch-tracker')
                 const data = await res.json()
                 setChartData(data)
                 if (data.length > 0) setActiveBranch(data[0])
@@ -62,7 +62,7 @@ export function IncomeBranchTracker() {
                     </div>
                     <div>
                         <h2 className="text-xl font-bold text-slate-800">Income Branch Tracker</h2>
-                        <p className="text-xs font-medium text-slate-500">Revenue across all branches</p>
+                        <p className="text-xs font-medium text-slate-500">Revenue for {new Date().toLocaleString('default', { month: 'long' })}</p>
                     </div>
                 </div>
             </div>
@@ -82,12 +82,12 @@ export function IncomeBranchTracker() {
                         ${activeBranch ? activeBranch.income.toLocaleString() : "0"}
                     </h3>
                     <div className="flex items-center gap-2 mt-4">
-                        <span className="text-sm font-bold text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-full flex items-center gap-1">
-                            <TrendingUp className="h-3 w-3" />
+                        <span className={`text-sm font-bold ${activeBranch?.increase?.includes('-') ? 'text-red-600 bg-red-500/10' : 'text-emerald-600 bg-emerald-500/10'} px-3 py-1 rounded-full flex items-center gap-1`}>
+                            <TrendingUp className={`h-3 w-3 ${activeBranch?.increase?.includes('-') ? 'rotate-180' : ''}`} />
                             {activeBranch ? activeBranch.increase : "0%"}
                         </span>
                         <p className="text-xs font-medium text-slate-400 italic">
-                            vs last month
+                            vs. previous month
                         </p>
                     </div>
                 </div>
