@@ -25,6 +25,28 @@ export default function BranchManagerDashboard() {
     
     useEffect(() => {
         fetchDashboardData();
+
+        // 🟢 Set up Supabase Real-time Subscriptions for Live Mode
+        const channel = supabase
+            .channel('dashboard-changes')
+            // Listen for new/updated orders
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+                fetchDashboardData();
+            })
+            // Listen for staff clocking in/out
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'employee_shifts' }, () => {
+                fetchDashboardData();
+            })
+            // Listen for inventory stock changes
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'branch_stock' }, () => {
+                fetchDashboardData();
+            })
+            .subscribe();
+
+        // Cleanup subscription when leaving the page
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, [branchId]);
 
     const fetchDashboardData = async () => {
