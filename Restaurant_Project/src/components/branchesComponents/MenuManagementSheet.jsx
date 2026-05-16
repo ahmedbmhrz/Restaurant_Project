@@ -11,7 +11,7 @@ export function MenuManagementSheet({ products = [], branchId, refreshData }) {
     
     const handleUpdateStock = async (productId, newStock) => {
         try {
-            await fetch('http://localhost:5000/api/branch-stock', {
+            await fetch('/api/branch-stock', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -28,7 +28,7 @@ export function MenuManagementSheet({ products = [], branchId, refreshData }) {
 
     const handleToggleActive = async (productId, currentStatus) => {
         try {
-            await fetch(`http://localhost:5000/api/products/${productId}`, {
+            await fetch(`/api/products/${productId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ is_active: !currentStatus })
