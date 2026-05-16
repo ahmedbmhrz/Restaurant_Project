@@ -1,5 +1,5 @@
 import { BranchNotificationCenter } from "./navbarcomponents/BranchNotificationCenter"
-import { UserProfile } from "./navbarcomponents/UserProfile"
+import { BranchUserProfile } from "./navbarcomponents/BranchUserProfile"
 import { Pizza } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
@@ -48,7 +48,7 @@ export function BranchNavbar({ branchName }) {
                     {user ? (
                         <>
                             <BranchNotificationCenter />
-                            <UserProfile user={user} />
+                            <BranchUserProfile user={user} />
                         </>
                     ) : (
                         <Button asChild variant="ghost" className="font-bold text-slate-600">
