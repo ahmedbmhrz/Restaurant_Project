@@ -235,12 +235,88 @@ router.post('/busy-hours', async (req, res) => {
             });
         }
         
-        // 3. Call Python ML service
+        // 3. If timeframe is dayOfWeek, generate a specific 7-day timeline
+        if (timeframe === 'dayOfWeek') {
+            const timeline = [];
+            const now = new Date();
+            
+            // Calculate recent trend factor (last 7 days vs historical average)
+            let recentTotal = 0;
+            for (let i = 0; i < 7; i++) {
+                const d = new Date();
+                d.setDate(now.getDate() - i);
+                const dateKey = d.toISOString().split('T')[0];
+                const dayActual = dailyCounts[dateKey] ? Object.values(dailyCounts[dateKey]).reduce((a, b) => a + b, 0) : 0;
+                recentTotal += dayActual;
+            }
+            const recentAvg = recentTotal / 7;
+            
+            // Get last 3 days + today + next 3 days
+            for (let i = -3; i <= 3; i++) {
+                const d = new Date();
+                d.setDate(now.getDate() + i);
+                const dateKey = d.toISOString().split('T')[0];
+                const dateLabel = dateKey.slice(5); // MM-DD
+                const dayIdx = d.getDay();
+                
+                // Actual traffic for this specific day
+                const actual = dailyCounts[dateKey] ? Object.values(dailyCounts[dateKey]).reduce((a, b) => a + b, 0) : 0;
+                
+                // Historical average for this day of week
+                const historicalDays = trafficByPeriod[dayIdx] || [];
+                const histAvg = historicalDays.length > 0 ? historicalDays.reduce((a, b) => a + b, 0) / historicalDays.length : 0;
+                
+                // Smart Prediction: Blend historical average with recent trend
+                // If recentAvg is 0, trendFactor will be 0, pulling prediction down
+                const trendFactor = histAvg > 0 ? (recentAvg / histAvg) : 1;
+                // Cap the trend factor to prevent wild swings, but allow it to go to 0
+                const cappedTrend = Math.min(Math.max(trendFactor, 0), 1.5);
+                
+                let predicted = 0;
+                if (i >= 0) {
+                    predicted = Math.round(histAvg * cappedTrend * 1.05);
+                }
+                
+                timeline.push({
+                    date: dateLabel,
+                    fullDate: dateKey,
+                    actual: i <= 0 ? actual : 0,
+                    predicted: i >= 0 ? (i === 0 && actual > 0 ? Math.max(actual, predicted) : predicted) : 0
+                });
+            }
+            
+            return res.json({
+                status: "success",
+                branch: branchId,
+                timeline: timeline
+            });
+        }
+
+        // 4. Calculate recent trend factor for Hourly view as well
+        let recentTotal = 0;
+        const now = new Date();
+        for (let i = 0; i < 7; i++) {
+            const d = new Date();
+            d.setDate(now.getDate() - i);
+            const dateKey = d.toISOString().split('T')[0];
+            const dayActual = dailyCounts[dateKey] ? Object.values(dailyCounts[dateKey]).reduce((a, b) => a + b, 0) : 0;
+            recentTotal += dayActual;
+        }
+        const recentAvg = recentTotal / 7;
+        
+        // Calculate global average per day to get a baseline trend
+        const totalHistoricalDays = Object.keys(dailyCounts).length || 1;
+        const globalDailyAvg = Object.values(trafficByPeriod).flat().reduce((a, b) => a + b, 0) / totalHistoricalDays;
+        
+        const trendFactor = globalDailyAvg > 0 ? (recentAvg / globalDailyAvg) : (recentAvg > 0 ? 1 : 0);
+        const cappedTrend = Math.min(Math.max(trendFactor, 0), 1.5);
+
+        // 5. Call Python ML service
         const pythonRes = await fetch(`${PYTHON_URL}/api/predict/busy-hours`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                traffic_by_hour: trafficByPeriod // Python script handles the keys generically
+                traffic_by_hour: trafficByPeriod 
             })
         });
         
@@ -250,10 +326,36 @@ router.post('/busy-hours', async (req, res) => {
         
         const busyHours = await pythonRes.json();
         
-        // 4. Return response
+        // 6. Calculate hourly actuals for TODAY specifically
+        const hourlyActuals = {};
+        const todayStr = new Date().toISOString().split('T')[0];
+        
+        filteredData.forEach(record => {
+            const dateObj = new Date(record.created_at);
+            const dateStr = dateObj.toISOString().split('T')[0];
+            if (dateStr === todayStr) {
+                const hour = dateObj.getHours();
+                hourlyActuals[hour] = (hourlyActuals[hour] || 0) + 1;
+            }
+        });
+        
+        // Apply trend factor to python results
+        if (busyHours.hourly_forecast) {
+            Object.keys(busyHours.hourly_forecast).forEach(h => {
+                busyHours.hourly_forecast[h] = Math.round(busyHours.hourly_forecast[h] * cappedTrend);
+            });
+        }
+        if (busyHours.peak_hours) {
+            busyHours.peak_hours.forEach(peak => {
+                peak.expected_traffic = Math.round(peak.expected_traffic * cappedTrend);
+            });
+        }
+        
+        // 7. Return response
         res.json({
             status: "success",
             branch: branchId,
+            hourly_actuals: hourlyActuals,
             ...busyHours
         });
     } catch (err) {
