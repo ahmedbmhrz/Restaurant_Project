@@ -166,17 +166,18 @@ export default function BranchManagerDashboard() {
                 {/* Main Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     
-                    {/* Left Column (Recent Orders + Alerts) */}
-                    <div className="lg:col-span-2 flex flex-col gap-6">
-                        <div className="h-[600px]">
-                            <RecentOrders recentOrders={recentOrders} />
-                        </div>
-                        <InventoryAlerts inventoryAlerts={inventoryAlerts} />
+                    {/* Top Row: Orders and Staff */}
+                    <div className="lg:col-span-2 h-[600px]">
+                        <RecentOrders recentOrders={recentOrders} />
                     </div>
 
-                    {/* Right Column (Staff) */}
-                    <div className="h-[600px]">
+                    <div className="lg:col-span-1 h-[600px]">
                         <StaffOnDuty onDutyStaff={onDutyStaff} />
+                    </div>
+
+                    {/* Bottom Row: Full Width Alerts */}
+                    <div className="lg:col-span-3">
+                        <InventoryAlerts inventoryAlerts={inventoryAlerts} />
                     </div>
 
                 </div>
