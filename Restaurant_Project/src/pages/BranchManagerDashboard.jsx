@@ -38,15 +38,11 @@ export default function BranchManagerDashboard() {
             if (branchData) setBranchName(branchData.name);
             else setBranchName("Kadikoy Branch");
 
-            // 2. Get Today's Orders & Metrics
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
+            // 2. Get All Orders (TESTING: Removed Date Filter)
             const { data: orders } = await supabase
                 .from('orders')
                 .select('id, total_amount, created_at, status, order_type')
                 .eq('branch_id', branchId)
-                .gte('created_at', today.toISOString())
                 .order('created_at', { ascending: false });
 
             if (orders && orders.length > 0) {
@@ -54,7 +50,7 @@ export default function BranchManagerDashboard() {
                 setTodaysIncome(orders.reduce((sum, o) => sum + (o.total_amount || 0), 0));
                 setRecentOrders(orders.slice(0, 15));
                 
-                // 3. Get Items Sold Today
+                // 3. Get Items Sold
                 const orderIds = orders.map(o => o.id);
                 const { data: orderItems } = await supabase
                     .from('order_items')
@@ -71,12 +67,11 @@ export default function BranchManagerDashboard() {
                 setRecentOrders([]);
             }
 
-            // 4. Get On-Duty Staff
+            // 4. Get All Staff (TESTING: Removed Active Status Filter)
             const { data: shifts } = await supabase
                 .from('employee_shifts')
                 .select('clock_in, users(full_name, role, avatar_url)')
-                .eq('branch_id', branchId)
-                .eq('status', 'Active');
+                .eq('branch_id', branchId);
                 
             if (shifts && shifts.length > 0) {
                 setOnDutyStaff(shifts);
