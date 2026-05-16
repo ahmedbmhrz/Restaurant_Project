@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
+import { HashRouter, Route, Routes, Navigate } from 'react-router-dom'
 import Home from "./pages/Home"
 import Branches from "./pages/Branches"
 import AIPrediction from "./pages/AIPrediction"
@@ -11,7 +11,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 function App() {
   return (
     <TooltipProvider>
-      <BrowserRouter>
+      <HashRouter>
         <Routes>
           <Route path="/" element={<Navigate to="/home" />} />
           <Route path="/home" element={<Home />} />
@@ -21,7 +21,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/branch-dashboard" element={<BranchManagerDashboard />} />
         </Routes>
-      </BrowserRouter>
+      </HashRouter>
     </TooltipProvider>
   )
 }

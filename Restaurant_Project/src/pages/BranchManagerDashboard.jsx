@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navbar } from "@/components/Navbar";
+import { BranchNavbar } from "@/components/BranchNavbar";
 import { supabase } from '../lib/supabase';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -127,7 +127,7 @@ export default function BranchManagerDashboard() {
 
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
-            <Navbar />
+            <BranchNavbar branchName={branchName} />
             
             <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full flex flex-col gap-8">
                 
