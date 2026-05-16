@@ -8,6 +8,15 @@ router.get('/notifications', async (req, res) => {
         const notifications = [];
         let notifId = 1;
 
+        // 0. HQ Directive to Branch Manager (Urgent/Info)
+        notifications.push({
+            id: notifId++,
+            title: "🚨 DIRECTIVE FROM HQ",
+            description: "ATTN Branch Manager: Severe storm approaching. Ensure all outdoor patio seating is secured and closed by 4:00 PM today.",
+            timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), // 5 mins ago
+            type: "urgent"
+        });
+
         // 1. Critical Low Stock Alerts (Urgent)
         // Check for products where stock < 50
         const { data: stockData, error: stockError } = await supabase

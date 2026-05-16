@@ -1,4 +1,4 @@
-import { NotificationCenter } from "./navbarcomponents/NotificationCenter"
+import { BranchNotificationCenter } from "./navbarcomponents/BranchNotificationCenter"
 import { UserProfile } from "./navbarcomponents/UserProfile"
 import { Pizza } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -11,11 +11,18 @@ export function BranchNavbar({ branchName }) {
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user ?? null);
+            if (session?.user) {
+                setUser(session.user);
+            } else {
+                // FALLBACK MOCK USER since we are using a mock login flow
+                setUser({ email: 'manager@kadikoy.com', user_metadata: { full_name: 'Branch Manager' } });
+            }
         });
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user ?? null);
+            if (session?.user) {
+                setUser(session.user);
+            }
         });
 
         return () => subscription.unsubscribe();
@@ -40,7 +47,7 @@ export function BranchNavbar({ branchName }) {
                 <div className="ml-auto flex items-center gap-2">
                     {user ? (
                         <>
-                            <NotificationCenter />
+                            <BranchNotificationCenter />
                             <UserProfile user={user} />
                         </>
                     ) : (
