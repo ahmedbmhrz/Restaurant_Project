@@ -28,8 +28,41 @@ router.post('/sales-forecast', async (req, res) => {
         
         if (error) throw error;
         
-        // Group sales by timeframe
+        // 1.5. Pre-populate groupedSales with appropriate range to ensure no gaps
         const groupedSales = {};
+        const now = new Date();
+
+        if (timeframe === 'year') {
+            const currentYear = now.getFullYear();
+            for (let i = 4; i >= 0; i--) {
+                groupedSales[(currentYear - i).toString()] = 0;
+            }
+        } else if (timeframe === 'month') {
+            for (let i = 11; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                groupedSales[dateKey] = 0;
+            }
+        } else if (timeframe === 'week') {
+            for (let i = 11; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(now.getDate() - (i * 7));
+                const firstDayOfYear = new Date(d.getFullYear(), 0, 1);
+                const pastDaysOfYear = (d - firstDayOfYear) / 86400000;
+                const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+                const dateKey = `${d.getFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+                groupedSales[dateKey] = 0;
+            }
+        } else {
+            // Default: Daily (last 30 days)
+            for (let i = 30; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(now.getDate() - i);
+                const dateKey = d.toISOString().split('T')[0];
+                groupedSales[dateKey] = 0;
+            }
+        }
+
         if (salesData) {
             salesData.forEach(order => {
                 const dateObj = new Date(order.created_at);
@@ -48,7 +81,8 @@ router.post('/sales-forecast', async (req, res) => {
                     dateKey = dateObj.toISOString().split('T')[0];
                 }
                 
-                if (!groupedSales[dateKey]) {
+                // Only add to groupedSales if it's within our tracked range (or create it if missing)
+                if (groupedSales[dateKey] === undefined) {
                     groupedSales[dateKey] = 0;
                 }
                 groupedSales[dateKey] += (order.total_amount || 0);
@@ -141,7 +175,7 @@ router.post('/sales-forecast', async (req, res) => {
 // ===== BUSY HOURS PREDICTION =====
 router.post('/busy-hours', async (req, res) => {
     try {
-        const { branchId, timeframe = 'hour' } = req.body;
+        const { branchId, timeframe = 'hour', dayOfWeek = null } = req.body;
         
         // 1. Fetch order data from Supabase
         let query = supabase.from('orders').select('created_at');
@@ -151,25 +185,38 @@ router.post('/busy-hours', async (req, res) => {
         
         const { data: orderData, error } = await query
             .order('created_at', { ascending: false })
-            .limit(1500); // Increased limit to ensure we have enough data for a full week profile
+            .limit(2500); // Increased limit to ensure we have enough data for specific day profiles
         
         if (error) throw error;
         
-        // 2. Group by hour or day of week based on order creation time
+        // Filter by day of week if specified (0-6)
+        let filteredData = orderData || [];
+        if (dayOfWeek !== null && dayOfWeek !== undefined) {
+            filteredData = filteredData.filter(record => {
+                const dateObj = new Date(record.created_at);
+                return dateObj.getDay() === parseInt(dayOfWeek);
+            });
+        }
+        
+        // 2. Pre-populate trafficByPeriod to ensure all hours/days are accounted for
         const trafficByPeriod = {};
+        if (timeframe === 'dayOfWeek') {
+            for (let i = 0; i <= 6; i++) trafficByPeriod[i] = [];
+        } else {
+            for (let i = 0; i <= 23; i++) trafficByPeriod[i] = [];
+        }
+
         const dailyCounts = {}; // Used to track traffic per individual day to calculate averages
         
-        if (orderData) {
-            orderData.forEach(record => {
+        if (filteredData) {
+            filteredData.forEach(record => {
                 const dateObj = new Date(record.created_at);
                 const dateStr = dateObj.toISOString().split('T')[0];
                 
                 let periodKey;
                 if (timeframe === 'dayOfWeek') {
-                    // Group by Day of Week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
                     periodKey = dateObj.getDay(); 
                 } else {
-                    // Group by Hour of Day (0 - 23)
                     periodKey = dateObj.getHours(); 
                 }
                 
@@ -181,8 +228,9 @@ router.post('/busy-hours', async (req, res) => {
             // Convert to the format Python expects: { period: [count1, count2, ...] }
             Object.values(dailyCounts).forEach(dayRecord => {
                 Object.entries(dayRecord).forEach(([period, count]) => {
-                    if (!trafficByPeriod[period]) trafficByPeriod[period] = [];
-                    trafficByPeriod[period].push(count);
+                    if (trafficByPeriod[period] !== undefined) {
+                        trafficByPeriod[period].push(count);
+                    }
                 });
             });
         }

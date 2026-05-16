@@ -14,6 +14,7 @@ export function BusyHours({ selectedBranch = "all", branchName = "All Branches" 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [timeframe, setTimeframe] = useState('hour');
+    const [selectedDay, setSelectedDay] = useState('all'); // 'all' or 0-6 (Sun-Sat)
 
     useEffect(() => {
         const fetchBusyHours = async () => {
@@ -24,7 +25,8 @@ export function BusyHours({ selectedBranch = "all", branchName = "All Branches" 
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         branchId: selectedBranch,
-                        timeframe: timeframe
+                        timeframe: timeframe,
+                        dayOfWeek: selectedDay !== 'all' ? parseInt(selectedDay) : null
                     })
                 });
                 
@@ -78,7 +80,7 @@ export function BusyHours({ selectedBranch = "all", branchName = "All Branches" 
         };
         
         fetchBusyHours();
-    }, [selectedBranch, timeframe]);
+    }, [selectedBranch, timeframe, selectedDay]);
 
     if (loading) {
         return (
@@ -97,28 +99,48 @@ export function BusyHours({ selectedBranch = "all", branchName = "All Branches" 
     }
 
     return (
-        <Card className="flex-1">
+        <Card className="flex-1 border shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div>
-                    <CardTitle>Predicted Busy {timeframe === 'hour' ? 'Hours' : 'Days'}</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                        Predicted Busy {timeframe === 'hour' ? 'Hours' : 'Days'}
+                    </CardTitle>
                     <CardDescription>
                         Density prediction for: <span className="font-semibold text-teal-600">{branchName}</span>
                         {error && <span className="text-red-500 ml-2">(Using fallback data)</span>}
                     </CardDescription>
                 </div>
-                <select 
-                    value={timeframe} 
-                    onChange={(e) => setTimeframe(e.target.value)}
-                    className="border border-slate-200 rounded px-3 py-1 bg-white text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
-                >
-                    <option value="hour">By Hour</option>
-                    <option value="dayOfWeek">By Day of Week</option>
-                </select>
+                <div className="flex gap-2">
+                    {timeframe === 'hour' && (
+                        <select 
+                            value={selectedDay} 
+                            onChange={(e) => setSelectedDay(e.target.value)}
+                            className="border border-slate-200 rounded px-2 py-1 bg-white text-xs text-slate-600 font-bold focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        >
+                            <option value="all">All Days (Avg)</option>
+                            <option value="1">Mondays</option>
+                            <option value="2">Tuesdays</option>
+                            <option value="3">Wednesdays</option>
+                            <option value="4">Thursdays</option>
+                            <option value="5">Fridays</option>
+                            <option value="6">Saturdays</option>
+                            <option value="0">Sundays</option>
+                        </select>
+                    )}
+                    <select 
+                        value={timeframe} 
+                        onChange={(e) => setTimeframe(e.target.value)}
+                        className="border border-slate-200 rounded px-3 py-1 bg-white text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    >
+                        <option value="hour">By Hour</option>
+                        <option value="dayOfWeek">By Day of Week</option>
+                    </select>
+                </div>
             </CardHeader>
             <CardContent>
                 <ChartContainer config={{
                     actual: {
-                        label: "Actual Average",
+                        label: "Historical Avg",
                         color: "#0f172a", // Dark slate
                     },
                     predicted: {
