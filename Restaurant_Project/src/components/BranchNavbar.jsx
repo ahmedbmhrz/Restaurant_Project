@@ -48,7 +48,7 @@ export function BranchNavbar({ branchName }) {
                     {user ? (
                         <>
                             <BranchNotificationCenter />
-                            <BranchUserProfile user={user} />
+                            <BranchUserProfile user={user} branchName={branchName} />
                         </>
                     ) : (
                         <Button asChild variant="ghost" className="font-bold text-slate-600">

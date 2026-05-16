@@ -18,7 +18,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useNavigate } from "react-router-dom"
 
-export function BranchUserProfile({ user }) {
+export function BranchUserProfile({ user, branchName }) {
     const navigate = useNavigate()
 
     const handleSignOut = () => {
@@ -36,7 +36,7 @@ export function BranchUserProfile({ user }) {
                 <button className="flex items-center gap-2 p-1.5 pl-2.5 rounded-full hover:bg-muted transition-all border border-transparent hover:border-border group ml-1">
                     <div className="hidden lg:block text-right mr-1">
                         <p className="text-[11px] font-bold leading-none text-slate-900">{fullName}</p>
-                        <p className="text-[10px] leading-none text-slate-500 mt-1">On Duty</p>
+                        <p className="text-[10px] leading-none text-slate-500 mt-1">{branchName || 'Branch Manager'}</p>
                     </div>
                     <Avatar className="h-8 w-8 ring-2 ring-background group-hover:ring-primary/20 transition-all shadow-sm border border-primary/10">
                         <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-[10px] font-black shadow-inner">
