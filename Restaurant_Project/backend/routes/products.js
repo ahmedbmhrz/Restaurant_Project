@@ -48,14 +48,20 @@ router.patch('/products/:id', async (req, res) => {
 // Update Branch Stock Quantity
 router.patch('/branch-stock', async (req, res) => {
     const { branch_id, product_id, stock_quantity } = req.body;
+    console.log("📥 RECEIVED PATCH /api/branch-stock:", { branch_id, product_id, stock_quantity });
     try {
         const { data, error } = await supabase
             .from('branch_stock')
             .upsert({ branch_id, product_id, stock_quantity })
             .select();
-        if (error) throw error;
+        if (error) {
+            console.error("❌ SUPABASE UPSERT ERROR:", error);
+            throw error;
+        }
+        console.log("✅ SUPABASE UPSERT SUCCESS:", data);
         res.json(data[0]);
     } catch (err) {
+        console.error("❌ BACKEND PATCH ERROR:", err.message);
         res.status(500).json({ error: err.message });
     }
 });

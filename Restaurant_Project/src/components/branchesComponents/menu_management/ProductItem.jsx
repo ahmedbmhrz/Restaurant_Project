@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Eye, EyeOff, Check, RotateCcw } from "lucide-react"
@@ -7,6 +7,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 export function ProductItem({ product, onUpdateStock, onToggleActive }) {
     const [currentStock, setCurrentStock] = useState(product.stock_quantity || 0);
     const [isUpdating, setIsUpdating] = useState(false);
+
+    useEffect(() => {
+        setCurrentStock(product.stock_quantity || 0);
+    }, [product.stock_quantity]);
+
     const hasChanged = currentStock !== product.stock_quantity;
 
     const handleSave = async () => {

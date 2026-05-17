@@ -26,16 +26,15 @@ app.get('/', (req, res) => {
 });
 
 // Route Mounting
-app.use('/api', branchesRouter);
 app.use('/api/stats', statsRouter);
 app.use('/api', productsRouter); // Handles /api/products and /api/branch-stock
 app.use('/api', usersRouter);    // Handles /api/users, /api/branch-managers, /api/users/:id/branch
 app.use('/api', notificationsRouter); // Handles /api/notifications
 app.use('/api/predict', predictionsRouter); // Handles /api/predict/sales-forecast and /api/predict/busy-hours
 app.use('/api/search', searchRouter);
+app.use('/api', branchesRouter); // Wildcard router mounted last to prevent routing conflicts
 
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
-// Triggered restart for data sync v2.0
