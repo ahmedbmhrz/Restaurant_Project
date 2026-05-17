@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { DollarSign, ArrowUpRight, TrendingUp, Wallet, ReceiptText, Landmark, Info } from "lucide-react"
-import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis } from "recharts"
+import { Area, AreaChart, ResponsiveContainer, Tooltip as RechartsTooltip, XAxis, YAxis } from "recharts"
 
 export function Income({ data }) {
     if (!data) return null;
@@ -95,10 +95,11 @@ export function Income({ data }) {
                                 <AreaChart data={data.history}>
                                     <defs>
                                         <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
-                                            <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                         </linearGradient>
                                     </defs>
+                                    <YAxis hide />
                                     <XAxis
                                         dataKey="day"
                                         stroke="currentColor"
@@ -106,6 +107,7 @@ export function Income({ data }) {
                                         axisLine={false}
                                         tickLine={false}
                                         dy={10}
+                                        interval={0}
                                     />
                                     <RechartsTooltip
                                         content={({ active, payload }) => {
@@ -113,7 +115,7 @@ export function Income({ data }) {
                                                 return (
                                                     <div className="rounded-xl border border-border/50 bg-background/90 p-3 shadow-xl backdrop-blur-md">
                                                         <p className="text-[10px] font-bold uppercase text-muted-foreground">{payload[0].payload.day}</p>
-                                                        <p className="text-sm font-bold text-primary">${payload[0].value.toLocaleString()}</p>
+                                                        <p className="text-sm font-bold text-emerald-600">${payload[0].value.toLocaleString()}</p>
                                                     </div>
                                                 )
                                             }
@@ -123,7 +125,7 @@ export function Income({ data }) {
                                     <Area
                                         type="monotone"
                                         dataKey="amount"
-                                        stroke="var(--color-primary)"
+                                        stroke="#10b981"
                                         strokeWidth={3}
                                         fillOpacity={1}
                                         fill="url(#colorIncome)"
