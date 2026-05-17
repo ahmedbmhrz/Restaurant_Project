@@ -4,7 +4,7 @@ import { Star } from "lucide-react"
 export function MenuSpotlight({ dish }) {
     if (!dish) return null;
 
-    const isImage = dish.image?.startsWith('http');
+    const isImage = dish.image && (dish.image.startsWith('http') || dish.image.startsWith('/') || dish.image.includes('.'));
 
     return (
         <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-amber-500/10 to-transparent p-5 ring-1 ring-amber-500/20 mb-6 group/dish">

@@ -1,5 +1,5 @@
 import { SearchBar } from "./navbarcomponents/SearchBar"
-import { QuickActions } from "./navbarcomponents/QuickActions"
+import { QuickActions } from "./navbarcomponents/quick_actions/QuickActions"
 import { NavLinks } from "./navbarcomponents/NavLinks"
 import { NotificationCenter } from "./navbarcomponents/NotificationCenter"
 import { UserProfile } from "./navbarcomponents/UserProfile"

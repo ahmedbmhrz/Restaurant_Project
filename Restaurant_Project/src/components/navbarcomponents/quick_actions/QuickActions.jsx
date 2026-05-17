@@ -1,9 +1,9 @@
 import { useState } from "react"
-import { 
-    Plus, 
-    ShoppingBag, 
-    UserPlus, 
-    Store, 
+import {
+    Plus,
+    ShoppingBag,
+    UserPlus,
+    Store,
     PlusCircle,
     ShieldCheck
 } from "lucide-react"
@@ -82,10 +82,10 @@ export function QuickActions() {
                 </DropdownMenuContent>
             </DropdownMenu>
 
-            <QuickActionModal 
-                actionType={actionType} 
-                isOpen={!!actionType} 
-                onClose={() => setActionType(null)} 
+            <QuickActionModal
+                actionType={actionType}
+                isOpen={!!actionType}
+                onClose={() => setActionType(null)}
             />
         </div>
     );

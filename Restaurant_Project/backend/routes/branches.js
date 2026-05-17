@@ -203,7 +203,8 @@ router.get('/branches-page-data', async (req, res) => {
                 name: topDish.name || "Menu Item",
                 price: topDish.price ? `$${(topDish.price).toFixed(2)}` : "$0.00",
                 orders: productSales[topDish.id] || 0,
-                image: topDish.image_url || "🍔"
+                image: topDish.image_url || "🍔",
+                rating: topDish.rating || 4.5
             },
             topItems: topItemsList,
             fullProductList: localizedProducts 

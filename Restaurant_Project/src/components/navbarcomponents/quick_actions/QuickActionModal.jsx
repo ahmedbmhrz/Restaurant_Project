@@ -3,16 +3,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Label } from "@/components/ui/label"
 import { Loader2, Store, PackagePlus, UserPlus, ShieldCheck, ChevronDown, AlertCircle } from "lucide-react"
 
-import { AddProductForm } from "../branchesComponents/menu_management/AddProductForm"
-import { HireStaffForm } from "../branchesComponents/branch_management/staffing/HireStaffForm"
-import { CreateBranchForm } from "./CreateBranchForm"
+import { AddProductForm } from "../../branchesComponents/menu_management/AddProductForm"
+import { HireStaffForm } from "../../branchesComponents/branch_management/staffing/HireStaffForm"
+import { CreateBranchForm } from "../CreateBranchForm"
 
 export function QuickActionModal({ actionType, isOpen, onClose }) {
     const [branches, setBranches] = useState([]);
     const [selectedBranchId, setSelectedBranchId] = useState("");
     const [isLoadingBranches, setIsLoadingBranches] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    
+
     useEffect(() => {
         if (isOpen && (actionType === 'product' || actionType === 'staff' || actionType === 'manager')) {
             fetchBranches();
@@ -67,12 +67,11 @@ export function QuickActionModal({ actionType, isOpen, onClose }) {
                 <div className="p-8 pb-4 border-b border-slate-100">
                     <DialogHeader>
                         <div className="flex items-center gap-3 mb-2">
-                            <div className={`p-2 rounded-xl ${
-                                actionType === 'product' ? 'bg-emerald-100' :
-                                actionType === 'staff' ? 'bg-blue-100' :
-                                actionType === 'manager' ? 'bg-indigo-100' :
-                                'bg-amber-100'
-                            }`}>
+                            <div className={`p-2 rounded-xl ${actionType === 'product' ? 'bg-emerald-100' :
+                                    actionType === 'staff' ? 'bg-blue-100' :
+                                        actionType === 'manager' ? 'bg-indigo-100' :
+                                            'bg-amber-100'
+                                }`}>
                                 {icon}
                             </div>
                             <DialogTitle className="text-2xl font-black tracking-tight text-slate-800">{title}</DialogTitle>
@@ -89,13 +88,12 @@ export function QuickActionModal({ actionType, isOpen, onClose }) {
                         <div className="space-y-2">
                             <div className="flex justify-between items-center px-1">
                                 <Label className="text-[11px] font-bold uppercase opacity-70">Target Branch</Label>
-                                <button 
+                                <button
                                     onClick={() => setSelectedBranchId(null)}
-                                    className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md transition-all ${
-                                        selectedBranchId === null 
-                                            ? 'bg-indigo-600 text-white shadow-sm' 
+                                    className={`text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md transition-all ${selectedBranchId === null
+                                            ? 'bg-indigo-600 text-white shadow-sm'
                                             : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-                                    }`}
+                                        }`}
                                 >
                                     Unassigned
                                 </button>
@@ -110,11 +108,10 @@ export function QuickActionModal({ actionType, isOpen, onClose }) {
                                         <div
                                             key={b.id}
                                             onClick={() => setSelectedBranchId(b.id)}
-                                            className={`p-3 rounded-xl border cursor-pointer transition-all relative ${
-                                                selectedBranchId === b.id 
-                                                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm' 
+                                            className={`p-3 rounded-xl border cursor-pointer transition-all relative ${selectedBranchId === b.id
+                                                    ? 'bg-indigo-50 border-indigo-200 text-indigo-700 shadow-sm'
                                                     : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                                            }`}
+                                                }`}
                                         >
                                             <div className="flex justify-between items-start gap-2">
                                                 <div className="font-bold text-sm truncate">{b.name}</div>
