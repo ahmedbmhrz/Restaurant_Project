@@ -7,12 +7,21 @@ router.get('/notifications', async (req, res) => {
     try {
         const notifications = [];
         let notifId = 1;
-
-        // 0. (Removed mock directive)
         
+        const companyId = req.headers['x-company-id'];
+        let branchIds = [];
+        
+        if (companyId) {
+            const { data: companyBranches } = await supabase
+                .from('branches')
+                .select('id')
+                .eq('company_id', companyId);
+            branchIds = (companyBranches || []).map(b => b.id);
+        }
+
         // 1. Critical Low Stock Alerts (Urgent)
         // Check for products where stock < 50
-        const { data: stockData, error: stockError } = await supabase
+        let stockQuery = supabase
             .from('branch_stock')
             .select(`
                 stock_quantity, 
@@ -24,12 +33,19 @@ router.get('/notifications', async (req, res) => {
             .order('stock_quantity', { ascending: true })
             .limit(10);
             
+        if (companyId) {
+            stockQuery = stockQuery.in('branch_id', branchIds);
+        } else {
+            stockQuery = stockQuery.eq('branch_id', '00000000-0000-0000-0000-000000000000');
+        }
+
+        const { data: stockData, error: stockError } = await stockQuery;
+            
         if (!stockError && stockData) {
             stockData.forEach(item => {
                 const branchName = item.branches?.name || 'a branch';
                 const productName = item.products?.name || 'A product';
                 
-                // Stable time for notification
                 const stableTime = new Date();
                 stableTime.setMinutes(12, 0, 0); 
 
@@ -44,11 +60,19 @@ router.get('/notifications', async (req, res) => {
         }
 
         // 2. Performance Warning (Warning)
-        const { data: recentOrders, error: orderError } = await supabase
+        let ordersQuery = supabase
             .from('orders')
             .select('total_amount, created_at')
             .order('created_at', { ascending: false })
             .limit(20);
+
+        if (companyId) {
+            ordersQuery = ordersQuery.eq('company_id', companyId);
+        } else {
+            ordersQuery = ordersQuery.eq('company_id', '00000000-0000-0000-0000-000000000000');
+        }
+            
+        const { data: recentOrders, error: orderError } = await ordersQuery;
             
         if (!orderError && recentOrders && recentOrders.length > 0) {
             const avgOrder = recentOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0) / recentOrders.length;
@@ -62,10 +86,6 @@ router.get('/notifications', async (req, res) => {
                 });
             }
         }
-
-        // 3. (Removed mock staffing)
-        // 4. (Removed mock AI forecast)
-        // 5. (Removed mock health)
 
         res.json(notifications.slice(0, 10));
     } catch (err) {

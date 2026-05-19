@@ -23,12 +23,19 @@ router.get('/income-branch-tracker', async (req, res) => {
         const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
-        // Fetch orders from the start of last month to now
-        const { data: orders, error: ordersError } = await supabase
+        // Fetch orders from the start of last month to now, scoped by companyId
+        let oQuery = supabase
             .from('orders')
             .select('branch_id, total_amount, created_at')
             .gte('created_at', startOfLastMonth);
             
+        if (companyId) {
+            oQuery = oQuery.eq('company_id', companyId);
+        } else {
+            oQuery = oQuery.eq('company_id', '00000000-0000-0000-0000-000000000000');
+        }
+
+        const { data: orders, error: ordersError } = await oQuery;
         if (ordersError) throw ordersError;
 
         // Group income by branch and month
@@ -37,7 +44,7 @@ router.get('/income-branch-tracker', async (req, res) => {
             branchStats[b.id] = { thisMonth: 0, lastMonth: 0 };
         });
 
-        orders.forEach(order => {
+        (orders || []).forEach(order => {
             const orderDate = new Date(order.created_at);
             const isThisMonth = orderDate >= new Date(startOfThisMonth);
             const branchId = order.branch_id;
@@ -76,7 +83,6 @@ router.get('/income-branch-tracker', async (req, res) => {
 
         // Return all branches, sorted by income
         const sortedData = chartData.sort((a, b) => b.income - a.income);
-
         res.json(sortedData);
     } catch (err) {
         console.error("Error in income-branch-tracker:", err);
@@ -89,7 +95,16 @@ let globalTargetIncome = 17500; // In-memory fallback for demo
 // Endpoint for the global income target progress
 router.get('/income-target', async (req, res) => {
     try {
-        const { data: orders, error } = await supabase.from('orders').select('total_amount');
+        const companyId = req.headers['x-company-id'];
+        
+        let oQuery = supabase.from('orders').select('total_amount');
+        if (companyId) {
+            oQuery = oQuery.eq('company_id', companyId);
+        } else {
+            oQuery = oQuery.eq('company_id', '00000000-0000-0000-0000-000000000000');
+        }
+        
+        const { data: orders, error } = await oQuery;
         if (error) throw error;
 
         let currentIncome = 0;

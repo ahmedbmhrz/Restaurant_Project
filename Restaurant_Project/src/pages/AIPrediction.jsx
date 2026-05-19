@@ -14,10 +14,21 @@ const AIPrediction = () => {
 
     useEffect(() => {
         const fetchBranches = async () => {
-            const { data } = await supabase
+            const { data: { session } } = await supabase.auth.getSession();
+            const companyId = session?.user?.user_metadata?.company_id;
+
+            let query = supabase
                 .from('branches')
                 .select('id, name')
                 .order('name');
+
+            if (companyId) {
+                query = query.eq('company_id', companyId);
+            } else {
+                query = query.eq('id', '00000000-0000-0000-0000-000000000000');
+            }
+
+            const { data } = await query;
             
             if (data) {
                 setBranches([{ id: "all", name: "All Branches" }, ...data]);

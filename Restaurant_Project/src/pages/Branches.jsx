@@ -3,6 +3,10 @@ import { ManagersnBranch } from "../components/branchesComponents/ManagersnBranc
 import { BranchTabs } from "../components/branchesComponents/BranchTabs"
 import { useState, useEffect } from "react"
 import { useLocation } from "react-router-dom"
+import { Building2, ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 function Branches() {
     const location = useLocation();
@@ -31,7 +35,8 @@ function Branches() {
             const res = await fetch(url, { cache: 'no-store' });
             const data = await res.json();
 
-            const formattedManagers = data.managers.map((m) => {
+            // Format managers only if managers array exists
+            const formattedManagers = (data.managers || []).map((m) => {
                 return {
                     ...m,
                     role: m.role ? m.role.replace('_', ' ') : 'Managing Director',
@@ -50,6 +55,28 @@ function Branches() {
             console.error("Error loading branch page data:", error);
         } finally {
             setIsFetching(false);
+        }
+    };
+
+    const handleCreateFirstBranch = async (e) => {
+        e.preventDefault();
+        const name = e.target.branchName.value;
+        const address = e.target.branchAddress.value;
+        const description = e.target.branchDesc.value;
+        
+        try {
+            const res = await fetch('/api/branches', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, address, description })
+            });
+            if (res.ok) {
+                const newBranch = await res.json();
+                setSelectedBranchId(newBranch.id);
+                fetchPageData();
+            }
+        } catch (error) {
+            console.error("Failed to create first branch:", error);
         }
     };
 
@@ -75,6 +102,70 @@ function Branches() {
                     <div className="flex flex-col items-center gap-6 animate-pulse">
                         <div className="h-16 w-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
                         <p className="text-primary font-bold tracking-widest uppercase">Initializing Dashboard...</p>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    if (pageData && (!pageData.allBranches || pageData.allBranches.length === 0)) {
+        return (
+            <div className="h-screen flex flex-col overflow-hidden bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
+                <Navbar />
+                <main className="flex-1 p-6 md:p-10 flex items-center justify-center">
+                    <div className="w-full max-w-xl bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.05)] rounded-[2.5rem] p-8 md:p-12 flex flex-col gap-8 transition-all hover:shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
+                        <div className="flex flex-col gap-3 text-center">
+                            <div className="mx-auto h-16 w-16 bg-[#00ADB5]/10 text-[#00ADB5] rounded-3xl flex items-center justify-center shadow-inner animate-bounce">
+                                <Building2 className="h-8 w-8" />
+                            </div>
+                            <h2 className="text-3xl font-black tracking-tight text-slate-800 mt-2">Launch Your First Branch</h2>
+                            <p className="text-sm font-medium text-slate-500 max-w-sm mx-auto">
+                                Welcome to Nexus Food! To unlock your real-time analytics, shifts, and branch management, let's setup your primary storefront.
+                            </p>
+                        </div>
+                        
+                        <form onSubmit={handleCreateFirstBranch} className="flex flex-col gap-5">
+                            <div className="space-y-2">
+                                <Label htmlFor="branchName" className="text-sm font-bold text-slate-600 ml-1">Branch Name</Label>
+                                <Input 
+                                    id="branchName" 
+                                    name="branchName" 
+                                    placeholder="e.g. Kadikoy Central" 
+                                    required 
+                                    className="bg-white/70 border-white/60 focus:bg-white focus:border-[#00ADB5] rounded-2xl h-12 px-4 transition-all shadow-sm"
+                                />
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <Label htmlFor="branchAddress" className="text-sm font-bold text-slate-600 ml-1">Branch Address</Label>
+                                <Input 
+                                    id="branchAddress" 
+                                    name="branchAddress" 
+                                    placeholder="e.g. Moda Cd. No:12, Istanbul" 
+                                    required 
+                                    className="bg-white/70 border-white/60 focus:bg-white focus:border-[#00ADB5] rounded-2xl h-12 px-4 transition-all shadow-sm"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="branchDesc" className="text-sm font-bold text-slate-600 ml-1">Description</Label>
+                                <Input 
+                                    id="branchDesc" 
+                                    name="branchDesc" 
+                                    placeholder="e.g. Flagship bistro serving Anatolian fusion dishes" 
+                                    required 
+                                    className="bg-white/70 border-white/60 focus:bg-white focus:border-[#00ADB5] rounded-2xl h-12 px-4 transition-all shadow-sm"
+                                />
+                            </div>
+                            
+                            <Button 
+                                type="submit" 
+                                className="w-full bg-[#222831] hover:bg-[#393E46] text-white font-bold h-12 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 mt-2 flex items-center justify-center gap-2 group"
+                            >
+                                <span>Launch Branch</span>
+                                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                            </Button>
+                        </form>
                     </div>
                 </main>
             </div>

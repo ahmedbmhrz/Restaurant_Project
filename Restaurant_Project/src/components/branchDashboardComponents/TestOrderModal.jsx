@@ -33,10 +33,21 @@ export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
     const fetchProducts = async () => {
         setLoading(true);
         try {
-            const { data, error } = await supabase
+            const { data: { session } } = await supabase.auth.getSession();
+            const companyId = session?.user?.user_metadata?.company_id;
+
+            let query = supabase
                 .from('products')
                 .select('*')
                 .eq('is_active', true);
+
+            if (companyId) {
+                query = query.eq('company_id', companyId);
+            } else {
+                query = query.eq('id', '00000000-0000-0000-0000-000000000000');
+            }
+
+            const { data, error } = await query;
             if (!error && data) {
                 setProducts(data);
             }
@@ -80,11 +91,15 @@ export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
             const tax = subtotal * 0.08;
             const total = subtotal + tax;
 
+            const { data: { session } } = await supabase.auth.getSession();
+            const companyId = session?.user?.user_metadata?.company_id;
+
             // 1. Insert Order
             const { data: orderData, error: orderError } = await supabase
                 .from('orders')
                 .insert([{
                     branch_id: branchId,
+                    company_id: companyId || null,
                     total_amount: total,
                     tax_amount: tax,
                     tip_amount: 0,

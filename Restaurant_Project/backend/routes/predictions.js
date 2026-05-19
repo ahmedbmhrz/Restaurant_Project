@@ -16,8 +16,16 @@ router.post('/sales-forecast', async (req, res) => {
         else if (timeframe === 'month') stepsToPredict = 6;
         else if (timeframe === 'year') stepsToPredict = 3;
         
+        const companyId = req.headers['x-company-id'];
+        
         // 1. Fetch sales data from Supabase
         let query = supabase.from('orders').select('total_amount, created_at');
+        if (companyId) {
+            query = query.eq('company_id', companyId);
+        } else {
+            query = query.eq('company_id', '00000000-0000-0000-0000-000000000000');
+        }
+        
         if (branchId !== 'all') {
             query = query.eq('branch_id', branchId);
         }
@@ -177,8 +185,16 @@ router.post('/busy-hours', async (req, res) => {
     try {
         const { branchId, timeframe = 'hour', dayOfWeek = null } = req.body;
         
+        const companyId = req.headers['x-company-id'];
+        
         // 1. Fetch order data from Supabase
         let query = supabase.from('orders').select('created_at');
+        if (companyId) {
+            query = query.eq('company_id', companyId);
+        } else {
+            query = query.eq('company_id', '00000000-0000-0000-0000-000000000000');
+        }
+        
         if (branchId !== 'all') {
             query = query.eq('branch_id', branchId);
         }
@@ -372,16 +388,22 @@ router.post('/insights', async (req, res) => {
     try {
         const { branchId } = req.body;
         
+        const companyId = req.headers['x-company-id'];
+        const headers = { 'Content-Type': 'application/json' };
+        if (companyId) {
+            headers['X-Company-Id'] = companyId;
+        }
+
         // Get forecast and busy hours data (call the functions directly)
         const forecastRes = await fetch(`${SERVER_URL}/api/predict/sales-forecast`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify({ branchId, daysToPredict: 7 })
         });
         
         const busyHoursRes = await fetch(`${SERVER_URL}/api/predict/busy-hours`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify({ branchId })
         });
         

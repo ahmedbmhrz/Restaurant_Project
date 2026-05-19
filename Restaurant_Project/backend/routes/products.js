@@ -6,10 +6,11 @@ const router = express.Router();
 // Create New Product
 router.post('/products', async (req, res) => {
     const { name, category, price, stock_quantity, branch_id, image_url } = req.body;
+    const companyId = req.headers['x-company-id'];
     try {
         const { data: product, error: pError } = await supabase
             .from('products')
-            .insert({ name, category, price, image_url, is_active: true })
+            .insert({ name, category, price, image_url, is_active: true, company_id: companyId || null })
             .select();
         
         if (pError) throw pError;
