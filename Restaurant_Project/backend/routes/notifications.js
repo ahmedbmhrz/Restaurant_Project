@@ -17,8 +17,9 @@ router.get('/notifications', async (req, res) => {
             .select(`
                 stock_quantity, 
                 branches(name), 
-                products(name)
+                products!inner(name, is_active)
             `)
+            .eq('products.is_active', true)
             .lt('stock_quantity', 50)
             .order('stock_quantity', { ascending: true })
             .limit(10);
