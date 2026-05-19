@@ -7,6 +7,9 @@ import { MetricCards } from "@/components/branchDashboardComponents/MetricCards"
 import { RecentOrders } from "@/components/branchDashboardComponents/RecentOrders";
 import { InventoryAlerts } from "@/components/branchDashboardComponents/InventoryAlerts";
 import { StaffOnDuty } from "@/components/branchDashboardComponents/StaffOnDuty";
+import { TestOrderModal } from "@/components/branchDashboardComponents/TestOrderModal";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 
 // Hardcoded branch ID for Kadikoy (as seen in insert test data)
 const KADIKOY_BRANCH_ID = '11111111-1111-1111-1111-111111111111';
@@ -14,6 +17,7 @@ const KADIKOY_BRANCH_ID = '11111111-1111-1111-1111-111111111111';
 export default function BranchManagerDashboard() {
     const [branchId] = useState(KADIKOY_BRANCH_ID);
     const [branchName, setBranchName] = useState("Loading...");
+    const [isTestOrderModalOpen, setIsTestOrderModalOpen] = useState(false);
     
     const [todaysIncome, setTodaysIncome] = useState(0);
     const [totalOrders, setTotalOrders] = useState(0);
@@ -149,11 +153,20 @@ export default function BranchManagerDashboard() {
             <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full flex flex-col gap-8">
                 
                 {/* Header */}
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-black text-slate-800 tracking-tight">
-                        {branchName} Dashboard
-                    </h1>
-                    <p className="text-slate-500 font-medium">Real-time localized metrics for your branch.</p>
+                <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-1">
+                        <h1 className="text-3xl font-black text-slate-800 tracking-tight">
+                            {branchName} Dashboard
+                        </h1>
+                        <p className="text-slate-500 font-medium">Real-time localized metrics for your branch.</p>
+                    </div>
+                    <Button 
+                        onClick={() => setIsTestOrderModalOpen(true)}
+                        className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-12 px-6 font-bold tracking-wide shadow-md shadow-indigo-200 gap-2"
+                    >
+                        <PlusCircle className="h-5 w-5" />
+                        Create Test Order
+                    </Button>
                 </div>
 
                 {/* Top Metrics Cards */}
@@ -182,6 +195,13 @@ export default function BranchManagerDashboard() {
 
                 </div>
             </main>
+            
+            <TestOrderModal 
+                isOpen={isTestOrderModalOpen}
+                onOpenChange={setIsTestOrderModalOpen}
+                branchId={branchId}
+                branchName={branchName}
+            />
         </div>
     );
 }

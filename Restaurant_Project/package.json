@@ -21,6 +21,7 @@
     "clsx": "^2.1.1",
     "dexie": "^4.4.2",
     "dexie-react-hooks": "^4.4.0",
+    "html2pdf.js": "^0.14.0",
     "lucide-react": "^0.563.0",
     "radix-ui": "^1.4.3",
     "react": "^19.2.0",
