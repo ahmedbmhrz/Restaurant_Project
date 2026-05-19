@@ -11,7 +11,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Plus, Minus, ReceiptText, Download, CheckCircle2, Building2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
-import html2pdf from 'html2pdf.js';
+import * as htmlToImage from 'html-to-image';
+import { jsPDF } from 'jspdf';
 
 export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
     const [products, setProducts] = useState([]);
@@ -88,8 +89,7 @@ export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
                     tax_amount: tax,
                     tip_amount: 0,
                     status: 'Completed',
-                    order_type: 'Dine-in',
-                    payment_method: 'Credit Card'
+                    order_type: 'Dine-in'
                 }])
                 .select()
                 .single();
@@ -100,7 +100,8 @@ export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
             const orderItemsInsert = itemsToInsert.map(item => ({
                 order_id: orderData.id,
                 product_id: item.product_id,
-                quantity: item.quantity
+                quantity: item.quantity,
+                unit_price: item.price_at_time
             }));
 
             const { error: itemsError } = await supabase
@@ -127,17 +128,35 @@ export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
         }
     };
 
-    const downloadPDF = () => {
-        const element = receiptRef.current;
-        const opt = {
-            margin:       10,
-            filename:     `Receipt-${completedOrder.id.split('-')[0].toUpperCase()}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true },
-            jsPDF:        { unit: 'mm', format: [100, 280], orientation: 'portrait' } // Thermal printer size (Wider)
-        };
-        
-        html2pdf().set(opt).from(element).save();
+    const downloadPDF = async () => {
+        try {
+            const element = receiptRef.current;
+            
+            // html-to-image uses modern SVG processing which supports Tailwind's oklch colors!
+            const imgData = await htmlToImage.toPng(element, { 
+                backgroundColor: '#ffffff',
+                pixelRatio: 2
+            });
+            
+            // We need to calculate height based on the DOM element size since we bypass canvas
+            const elementWidth = element.offsetWidth;
+            const elementHeight = element.offsetHeight;
+            
+            const pdfWidth = 100;
+            const pdfHeight = (elementHeight * pdfWidth) / elementWidth;
+            
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: [pdfWidth, pdfHeight]
+            });
+            
+            pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(`Receipt-${completedOrder.id.split('-')[0].toUpperCase()}.pdf`);
+        } catch (error) {
+            console.error("PDF generation failed:", error);
+            alert("Failed to generate PDF: " + error.message);
+        }
     };
 
     const closeModal = () => {
