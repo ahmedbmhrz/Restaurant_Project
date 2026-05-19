@@ -110,6 +110,35 @@ export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
 
             if (itemsError) throw itemsError;
 
+            // 3. Deduct Stock
+            const productIds = itemsToInsert.map(i => i.product_id);
+            const { data: currentStock, error: stockFetchError } = await supabase
+                .from('branch_stock')
+                .select('*')
+                .eq('branch_id', branchId)
+                .in('product_id', productIds);
+
+            if (!stockFetchError && currentStock) {
+                const updatedStock = currentStock.map(stockRow => {
+                    const orderedItem = itemsToInsert.find(i => i.product_id === stockRow.product_id);
+                    if (orderedItem) {
+                        return {
+                            ...stockRow,
+                            stock_quantity: Math.max(0, stockRow.stock_quantity - orderedItem.quantity)
+                        };
+                    }
+                    return stockRow;
+                });
+
+                if (updatedStock.length > 0) {
+                    const { error: stockUpdateError } = await supabase
+                        .from('branch_stock')
+                        .upsert(updatedStock);
+                    
+                    if (stockUpdateError) console.error("Error updating stock:", stockUpdateError);
+                }
+            }
+
             // Prepare Receipt Data
             setCompletedOrder({
                 ...orderData,
