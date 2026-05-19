@@ -51,7 +51,6 @@ export function SignupForm() {
         .upsert({ 
           id: userId,
           full_name: fullname,
-          email: email,
           company_id: companyData.id,
           role: 'HQ_Manager'
         });
