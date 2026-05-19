@@ -34,6 +34,37 @@ export function SignupForm() {
 
       if (authError) throw authError;
 
+      const userId = data.user.id;
+
+      // 1. Create a new Company (Tenant) for this HQ Manager
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .insert([{ name: `${fullname.split(' ')[0]}'s Restaurant HQ` }])
+        .select()
+        .single();
+      
+      if (companyError) throw companyError;
+
+      // 2. Insert/Update the user profile with the new company_id and role
+      const { error: userUpdateError } = await supabase
+        .from('users')
+        .upsert({ 
+          id: userId,
+          full_name: fullname,
+          email: email,
+          company_id: companyData.id,
+          role: 'HQ_Manager'
+        });
+
+      if (userUpdateError) throw userUpdateError;
+
+      // 3. Attach company_id to the active session metadata
+      await supabase.auth.updateUser({
+        data: {
+          company_id: companyData.id
+        }
+      });
+
       // Success! Redirect to the dashboard
       navigate("/")
     } catch (error) {

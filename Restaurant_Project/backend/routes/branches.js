@@ -16,13 +16,30 @@ const router = express.Router();
  */
 router.get('/', async (req, res) => {
     try {
-        const { data: branches, error: bError } = await supabase.from('branches').select('*');
+        const companyId = req.headers['x-company-id'];
+        console.log("[API] GET /api/ branches - Received companyId:", companyId);
+
+        let bQuery = supabase.from('branches').select('*');
+        if (companyId) {
+            bQuery = bQuery.eq('company_id', companyId);
+        } else {
+            // Strict isolation: if no company ID provided, return nothing
+            bQuery = bQuery.eq('id', '00000000-0000-0000-0000-000000000000'); 
+        }
+        const { data: branches, error: bError } = await bQuery;
         if (bError) throw bError;
 
-        const { data: managers, error: mError } = await supabase
+        let mQuery = supabase
             .from('users')
             .select('id, full_name, role, branch_id')
             .in('role', ['Branch_Manager', 'Manager']);
+        
+        if (companyId) {
+            mQuery = mQuery.eq('company_id', companyId);
+        } else {
+            mQuery = mQuery.eq('id', '00000000-0000-0000-0000-000000000000');
+        }
+        const { data: managers, error: mError } = await mQuery;
         if (mError) throw mError;
         
         const transformedData = branches.map(branch => {
@@ -45,10 +62,11 @@ router.get('/', async (req, res) => {
  */
 router.post('/', async (req, res) => {
     const { name, address, description } = req.body;
+    const companyId = req.headers['x-company-id'];
     try {
         const { data, error } = await supabase
             .from('branches')
-            .insert([{ name, address, description }])
+            .insert([{ name, address, description, company_id: companyId }])
             .select();
         if (error) throw error;
         res.json(data[0]);
@@ -82,17 +100,32 @@ router.patch('/branches/:id', async (req, res) => {
 router.get('/branches-page-data', async (req, res) => {
     try {
         const branchId = req.query.branchId || req.query.branch;
+        const companyId = req.headers['x-company-id'];
+        console.log("[API] GET /api/branches-page-data - Received companyId:", companyId);
 
         // --- STEP 1: INITIAL DATA FETCHING ---
-        const { data: managers, error: managerError } = await supabase
+        let mQuery = supabase
             .from('users')
             .select('*, branches(name)')
             .in('role', ['Branch_Manager', 'Manager']);
+        
+        if (companyId) {
+            mQuery = mQuery.eq('company_id', companyId);
+        } else {
+            mQuery = mQuery.eq('id', '00000000-0000-0000-0000-000000000000');
+        }
+        const { data: managers, error: managerError } = await mQuery;
         if (managerError) throw managerError;
 
         const targetBranchId = branchId || (managers && managers.length > 0 ? managers[0].branch_id : "11111111-1111-1111-1111-111111111111");
 
-        const { data: allDbBranches, error: allBranchError } = await supabase.from('branches').select('*');
+        let bQuery = supabase.from('branches').select('*');
+        if (companyId) {
+            bQuery = bQuery.eq('company_id', companyId);
+        } else {
+            bQuery = bQuery.eq('id', '00000000-0000-0000-0000-000000000000');
+        }
+        const { data: allDbBranches, error: allBranchError } = await bQuery;
         if (allBranchError) throw allBranchError;
 
         const targetBranch = (allDbBranches || []).find(b => b.id === targetBranchId) || (allDbBranches?.[0]);
@@ -279,7 +312,14 @@ router.get('/branches-page-data', async (req, res) => {
         const { count: activeStaffCount } = await supabase.from('employee_shifts').select('*', { count: 'exact', head: true }).is('clock_out', null).eq('branch_id', targetBranchId);
 
         const { data: branchStaff } = await supabase.from('users').select('*').eq('branch_id', targetBranchId);
-        const { data: allUsers } = await supabase.from('users').select('*');
+        
+        let allUQuery = supabase.from('users').select('*');
+        if (companyId) {
+            allUQuery = allUQuery.eq('company_id', companyId);
+        } else {
+            allUQuery = allUQuery.eq('id', '00000000-0000-0000-0000-000000000000');
+        }
+        const { data: allUsers } = await allUQuery;
 
         const operationalData = {
             traffic, departments, activity,

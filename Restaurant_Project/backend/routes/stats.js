@@ -6,7 +6,16 @@ const router = express.Router();
 // Endpoint for the IncomeBranchTracker component
 router.get('/income-branch-tracker', async (req, res) => {
     try {
-        const { data: branches, error: branchError } = await supabase.from('branches').select('*');
+        const companyId = req.headers['x-company-id'];
+        
+        let bQuery = supabase.from('branches').select('*');
+        if (companyId) {
+            bQuery = bQuery.eq('company_id', companyId);
+        } else {
+            bQuery = bQuery.eq('id', '00000000-0000-0000-0000-000000000000');
+        }
+        
+        const { data: branches, error: branchError } = await bQuery;
         if (branchError) throw branchError;
 
         // Calculate date ranges
