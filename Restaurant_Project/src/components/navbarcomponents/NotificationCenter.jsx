@@ -78,37 +78,37 @@ export function NotificationCenter() {
                     )}
                 </button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 p-0 overflow-hidden shadow-2xl border-primary/10" align="end">
-                <PopoverHeader className="p-4 bg-muted/30 border-b">
-                    <PopoverTitle className="text-sm font-bold flex items-center justify-between">
+            <PopoverContent className="w-[420px] p-0 overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.12)] border-primary/10 rounded-3xl" align="end">
+                <PopoverHeader className="p-5 bg-slate-50/50 border-b border-slate-100">
+                    <PopoverTitle className="text-base font-extrabold flex items-center justify-between text-slate-800">
                         Recent Activity
-                        <span className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest bg-white border px-1.5 py-0.5 rounded shadow-sm">Live Updates</span>
+                        <span className="text-[10px] font-black text-primary uppercase tracking-[0.15em] bg-primary/10 px-3 py-1 rounded-full shadow-sm">Live Updates</span>
                     </PopoverTitle>
                 </PopoverHeader>
-                <ScrollArea className="h-80">
-                    <div className="divide-y">
+                <ScrollArea className="h-[420px]">
+                    <div className="divide-y divide-slate-100">
                         {loading ? (
-                            <div className="p-8 flex justify-center">
-                                <span className="h-4 w-4 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
+                            <div className="p-12 flex justify-center">
+                                <span className="h-6 w-6 animate-spin rounded-full border-2 border-primary/30 border-t-primary" />
                             </div>
                         ) : notifications.length === 0 ? (
-                            <p className="p-8 text-center text-sm text-muted-foreground">No new alerts.</p>
+                            <div className="p-12 text-center text-sm font-bold text-slate-500">No new alerts.</div>
                         ) : (
                             notifications.map((n) => {
                                 const config = typeConfig[n.type] || typeConfig.info;
                                 const Icon = config.icon;
 
                                 return (
-                                    <div key={n.id} className="p-4 hover:bg-muted/50 transition-colors cursor-pointer flex gap-4">
-                                        <div className={`mt-1 h-8 w-8 rounded-lg flex items-center justify-center shadow-sm ${config.bg} ${config.color}`}>
-                                            <Icon className="h-4 w-4" />
+                                    <div key={n.id} className="p-5 hover:bg-slate-50/80 transition-colors cursor-pointer flex gap-4">
+                                        <div className={`mt-0.5 h-10 w-10 shrink-0 rounded-xl flex items-center justify-center shadow-sm ${config.bg} ${config.color}`}>
+                                            <Icon className="h-5 w-5" />
                                         </div>
-                                        <div className="flex-1 space-y-1">
+                                        <div className="flex-1 space-y-1.5">
                                             <div className="flex justify-between items-start">
-                                                <p className="text-sm font-bold text-slate-900 leading-tight">{n.title}</p>
-                                                <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap ml-2">{formatTimeAgo(n.timestamp)}</span>
+                                                <p className="text-sm font-black text-slate-800 leading-tight">{n.title}</p>
+                                                <span className="text-[11px] font-bold text-slate-400 whitespace-nowrap ml-2">{formatTimeAgo(n.timestamp)}</span>
                                             </div>
-                                            <p className="text-xs text-muted-foreground line-clamp-2">{n.description}</p>
+                                            <p className="text-[13px] font-medium text-slate-500 leading-relaxed pr-2">{n.description}</p>
                                         </div>
                                     </div>
                                 )

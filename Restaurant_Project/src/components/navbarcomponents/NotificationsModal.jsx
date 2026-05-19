@@ -48,7 +48,7 @@ export function NotificationsModal({ isOpen, onOpenChange, notifications, onClea
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0 overflow-hidden bg-white/95 backdrop-blur-2xl border-none shadow-2xl rounded-[2.5rem]">
+            <DialogContent className="max-w-4xl h-[85vh] flex flex-col p-0 overflow-hidden bg-white/95 backdrop-blur-2xl border-none shadow-2xl rounded-[2.5rem]">
                 
                 {/* Header Section */}
                 <div className="p-8 pb-6 bg-gradient-to-br from-slate-50 to-white border-b border-slate-100">

@@ -20,7 +20,8 @@ router.get('/notifications', async (req, res) => {
                 products(name)
             `)
             .lt('stock_quantity', 50)
-            .limit(4);
+            .order('stock_quantity', { ascending: true })
+            .limit(10);
             
         if (!stockError && stockData) {
             stockData.forEach(item => {

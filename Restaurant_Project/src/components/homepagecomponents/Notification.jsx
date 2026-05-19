@@ -28,7 +28,7 @@ export function Notification() {
     useEffect(() => {
         const fetchNotifications = async () => {
             try {
-                const res = await fetch('http://localhost:5000/api/notifications');
+                const res = await fetch('/api/notifications');
                 const data = await res.json();
                 
                 // Filter out notifications cleared by the user
@@ -94,6 +94,7 @@ export function Notification() {
                             return (
                                 <div 
                                     key={notification.id}
+                                    onClick={() => setShowAll(true)}
                                     className={`group relative flex gap-4 p-4 rounded-2xl border ${config.border} bg-white/60 hover:bg-white transition-all hover:shadow-md cursor-pointer overflow-hidden shrink-0`}
                                 >
                                     {/* Left Color Accent */}
