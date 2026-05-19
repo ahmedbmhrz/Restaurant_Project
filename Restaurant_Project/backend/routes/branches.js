@@ -303,15 +303,52 @@ router.get('/branches-page-data', async (req, res) => {
             const diffDays = Math.max(0, Math.floor((new Date() - hireDate) / (1000 * 60 * 60 * 24)));
             const tenureStr = diffDays > 365 ? `${Math.floor(diffDays/365)} Years` : `${Math.floor(diffDays/30)} Months`;
 
+            // Fetch manager shifts for real-time status and report logs
+            const { data: recentShifts } = await supabase
+                .from('employee_shifts')
+                .select('*')
+                .eq('user_id', m.id)
+                .order('clock_in', { ascending: false })
+                .limit(5);
+
+            const hasActiveShift = (recentShifts || []).some(s => s.clock_out === null);
+            const statusStr = hasActiveShift ? 'On Duty' : 'Offline';
+            const lastActiveStr = (recentShifts && recentShifts.length > 0)
+                ? getRelativeTime(recentShifts[0].clock_in)
+                : 'Recently';
+
+            const formattedShifts = (recentShifts || []).map(s => ({
+                id: s.id,
+                clock_in: s.clock_in,
+                clock_out: s.clock_out,
+                status: s.clock_out ? 'Completed' : 'Active'
+            }));
+
+            // Fetch manager's specific branch 30-day revenue
+            const startOf30Days = new Date();
+            startOf30Days.setDate(startOf30Days.getDate() - 30);
+            const { data: managerBranchOrders } = await supabase
+                .from('orders')
+                .select('total_amount')
+                .eq('branch_id', m.branch_id)
+                .gte('created_at', startOf30Days.toISOString());
+
+            const branch30DayRevenue = (managerBranchOrders || []).reduce((sum, o) => sum + (o.total_amount || 0), 0);
+
             return {
                 ...m,
                 name: m.full_name,
+                avatarSrc: m.avatar_url,
                 branchName: m.branches?.name || 'Unassigned',
                 avatarFallback: (m.full_name || 'BM').split(' ').map(n => n[0]).join('').toUpperCase(),
                 performance: incomeTrend.includes('-') ? 'Needs Review' : 'Good',
                 tenure: tenureStr,
                 growth: incomeTrend.replace('+', '').replace('%', ''),
-                revenueHistory: historyDays.map(d => d.amount)
+                revenueHistory: historyDays.map(d => d.amount),
+                status: statusStr,
+                lastActive: lastActiveStr,
+                recentShifts: formattedShifts,
+                currentRevenue: branch30DayRevenue
             };
         }));
 
