@@ -90,13 +90,26 @@ router.get('/income-branch-tracker', async (req, res) => {
     }
 });
 
-let globalTargetIncome = 17500; // In-memory fallback for demo
-
 // Endpoint for the global income target progress
 router.get('/income-target', async (req, res) => {
     try {
         const companyId = req.headers['x-company-id'];
         
+        // 1. Fetch tenant-specific target from the companies table
+        let targetIncome = 0; // Default fallback for brand new tenants
+        if (companyId) {
+            const { data: company, error: compErr } = await supabase
+                .from('companies')
+                .select('income_target')
+                .eq('id', companyId)
+                .maybeSingle();
+                
+            if (!compErr && company && company.income_target !== null) {
+                targetIncome = Number(company.income_target);
+            }
+        }
+
+        // 2. Fetch total sales scoped by companyId
         let oQuery = supabase.from('orders').select('total_amount');
         if (companyId) {
             oQuery = oQuery.eq('company_id', companyId);
@@ -112,12 +125,15 @@ router.get('/income-target', async (req, res) => {
             currentIncome = orders.reduce((sum, order) => sum + (order.total_amount || 0), 0);
         }
 
-        let progressPercentage = Math.round((currentIncome / globalTargetIncome) * 100);
+        let progressPercentage = 0;
+        if (targetIncome > 0) {
+            progressPercentage = Math.round((currentIncome / targetIncome) * 100);
+        }
         if (progressPercentage > 100) progressPercentage = 100;
         
         res.json({
             current: currentIncome,
-            target: globalTargetIncome,
+            target: targetIncome,
             percentage: progressPercentage
         });
     } catch (err) {
@@ -129,10 +145,22 @@ router.get('/income-target', async (req, res) => {
 router.post('/income-target', async (req, res) => {
     try {
         const { target } = req.body;
-        if (target && !isNaN(target)) {
-            globalTargetIncome = Number(target);
+        const companyId = req.headers['x-company-id'];
+        
+        if (!companyId) {
+            return res.status(400).json({ error: "Missing company context" });
         }
-        res.json({ success: true, target: globalTargetIncome });
+        
+        if (target && !isNaN(target)) {
+            const { error: updateErr } = await supabase
+                .from('companies')
+                .update({ income_target: Number(target) })
+                .eq('id', companyId);
+                
+            if (updateErr) throw updateErr;
+        }
+        
+        res.json({ success: true, target: Number(target) });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
