@@ -27,12 +27,18 @@ import {
 } from "@/components/ui/dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useNavigate } from "react-router-dom"
+import { supabase } from "../../lib/supabase"
 
 export function BranchUserProfile({ user, branchName }) {
     const navigate = useNavigate()
     const [activeModal, setActiveModal] = useState(null) // 'profile', 'settings', 'support', or null
 
-    const handleSignOut = () => {
+    const handleSignOut = async () => {
+        try {
+            await supabase.auth.signOut();
+        } catch (e) {
+            console.error("Sign out error:", e);
+        }
         navigate("/branch-login")
     }
 

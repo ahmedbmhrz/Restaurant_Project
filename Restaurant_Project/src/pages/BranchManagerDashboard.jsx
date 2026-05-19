@@ -11,11 +11,11 @@ import { TestOrderModal } from "@/components/branchDashboardComponents/TestOrder
 import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 
-// Hardcoded branch ID for Kadikoy (as seen in insert test data)
+// Hardcoded branch ID fallback for legacy mode
 const KADIKOY_BRANCH_ID = '11111111-1111-1111-1111-111111111111';
 
 export default function BranchManagerDashboard() {
-    const [branchId] = useState(KADIKOY_BRANCH_ID);
+    const [branchId, setBranchId] = useState(null);
     const [branchName, setBranchName] = useState("Loading...");
     const [isTestOrderModalOpen, setIsTestOrderModalOpen] = useState(false);
     
@@ -27,7 +27,37 @@ export default function BranchManagerDashboard() {
     const [inventoryAlerts, setInventoryAlerts] = useState([]);
     const [recentOrders, setRecentOrders] = useState([]);
     
+    // Resolve active branch context from logged-in manager's profile
     useEffect(() => {
+        const resolveBranch = async () => {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session?.user) {
+                    const { data: dbUser } = await supabase
+                        .from('users')
+                        .select('branch_id')
+                        .eq('id', session.user.id)
+                        .maybeSingle();
+                        
+                    if (dbUser?.branch_id) {
+                        setBranchId(dbUser.branch_id);
+                        return;
+                    }
+                }
+                // Fallback to Kadikoy Central
+                setBranchId(KADIKOY_BRANCH_ID);
+            } catch (e) {
+                console.error("Failed to resolve branch context:", e);
+                setBranchId(KADIKOY_BRANCH_ID);
+            }
+        };
+        resolveBranch();
+    }, []);
+
+    // Set up real-time subscriptions and data fetching on branchId resolve
+    useEffect(() => {
+        if (!branchId) return;
+        
         fetchDashboardData();
 
         // 🟢 Set up Supabase Real-time Subscriptions for Live Mode
@@ -54,6 +84,7 @@ export default function BranchManagerDashboard() {
     }, [branchId]);
 
     const fetchDashboardData = async () => {
+        if (!branchId) return;
         try {
             // 1. Get Branch Name
             const { data: branchData } = await supabase
@@ -62,7 +93,7 @@ export default function BranchManagerDashboard() {
                 .eq('id', branchId)
                 .single();
             if (branchData) setBranchName(branchData.name);
-            else setBranchName("Kadikoy Branch");
+            else setBranchName("Branch Store");
 
             // 2. Get All Orders (TESTING: Removed Date Filter)
             const { data: orders } = await supabase
@@ -146,6 +177,17 @@ export default function BranchManagerDashboard() {
         }
     };
 
+    if (!branchId) {
+        return (
+            <div className="h-screen bg-slate-950 flex flex-col items-center justify-center font-sans">
+                <div className="flex flex-col items-center gap-6 animate-pulse text-white">
+                    <div className="h-16 w-16 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+                    <p className="text-emerald-400 font-bold tracking-widest uppercase text-xs">Unlocking Branch Terminal...</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
             <BranchNavbar branchName={branchName} />
@@ -205,4 +247,3 @@ export default function BranchManagerDashboard() {
         </div>
     );
 }
-

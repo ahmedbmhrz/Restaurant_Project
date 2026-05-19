@@ -57,20 +57,104 @@ router.get('/', async (req, res) => {
     }
 });
 
+
 /**
  * POST /api/
+ * Creates a brand new branch, generating a unique one-time activation code.
  */
 router.post('/', async (req, res) => {
     const { name, address, description } = req.body;
     const companyId = req.headers['x-company-id'];
+    
+    // Generate a random 6-character uppercase access code starting with BM-
+    const accessCode = 'BM-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    
     try {
         const { data, error } = await supabase
             .from('branches')
-            .insert([{ name, address, description, company_id: companyId }])
+            .insert([{ name, address, description, company_id: companyId, access_code: accessCode }])
             .select();
         if (error) throw error;
         res.json(data[0]);
     } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+/**
+ * POST /api/branch-manager/activate-terminal
+ * One-time activation code handler. Checks if the access code is valid,
+ * registers the user, creates their profile, and destroys the code.
+ */
+router.post('/branch-manager/activate-terminal', async (req, res) => {
+    const { accessCode, email, password, fullName } = req.body;
+    
+    if (!accessCode || !email || !password || !fullName) {
+        return res.status(400).json({ error: "All fields are required." });
+    }
+    
+    try {
+        // 1. Find the branch by access code (must not be NULL)
+        const { data: branch, error: branchErr } = await supabase
+            .from('branches')
+            .select('id, name, company_id')
+            .eq('access_code', accessCode)
+            .maybeSingle();
+            
+        if (branchErr) throw branchErr;
+        if (!branch) {
+            return res.status(400).json({ error: "Invalid or already activated branch code." });
+        }
+        
+        // 2. Register the user in Supabase Auth
+        const { data: authData, error: authErr } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    full_name: fullName,
+                    company_id: branch.company_id
+                }
+            }
+        });
+        
+        if (authErr) throw authErr;
+        if (!authData.user) {
+            return res.status(500).json({ error: "Failed to create authentication user." });
+        }
+        
+        // 3. Create the user's public profile linked to the branch and company
+        const { error: profileErr } = await supabase
+            .from('users')
+            .insert([{
+                id: authData.user.id,
+                full_name: fullName,
+                role: 'Branch_Manager',
+                branch_id: branch.id,
+                company_id: branch.company_id,
+                hire_date: new Date().toISOString().split('T')[0]
+            }]);
+            
+        if (profileErr) throw profileErr;
+        
+        // 4. NULL out the access code so it can NEVER be reused
+        const { error: burnErr } = await supabase
+            .from('branches')
+            .update({ access_code: null })
+            .eq('id', branch.id);
+            
+        if (burnErr) throw burnErr;
+        
+        // Return session data to sign in immediately on the frontend
+        res.json({
+            success: true,
+            session: authData.session,
+            user: authData.user,
+            branchId: branch.id,
+            companyId: branch.company_id
+        });
+    } catch (err) {
+        console.error("[Activation Error]:", err);
         res.status(500).json({ error: err.message });
     }
 });
