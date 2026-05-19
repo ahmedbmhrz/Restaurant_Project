@@ -58,9 +58,9 @@ router.post('/', async (req, res) => {
 });
 
 /**
- * PATCH /api/:id
+ * PATCH /api/branches/:id
  */
-router.patch('/:id', async (req, res) => {
+router.patch('/branches/:id', async (req, res) => {
     const { id } = req.params;
     const { name, address, description } = req.body;
     try {
