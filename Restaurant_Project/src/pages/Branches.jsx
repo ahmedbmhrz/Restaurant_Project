@@ -65,7 +65,7 @@ function Branches() {
         const description = e.target.branchDesc.value;
         
         try {
-            const res = await fetch('/api/branches', {
+            const res = await fetch('/api', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, address, description })
