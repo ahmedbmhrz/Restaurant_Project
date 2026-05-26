@@ -39,7 +39,8 @@ router.get('/notifications', async (req, res) => {
             
         if (branchIds.length > 0) {
             stockQuery = stockQuery.in('branch_id', branchIds);
-        } else if (!companyId && !branchId) {
+        } else {
+            // If company exists but has no branches, or if no company/branch is provided, return nothing
             stockQuery = stockQuery.eq('branch_id', '00000000-0000-0000-0000-000000000000');
         }
 
