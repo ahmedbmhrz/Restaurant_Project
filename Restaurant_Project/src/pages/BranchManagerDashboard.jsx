@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { BranchNavbar } from "@/components/BranchNavbar";
 import { supabase } from '../lib/supabase';
+import { db } from '../lib/db';
+import { useLiveQuery } from "dexie-react-hooks";
+import { OfflineSyncManager } from "@/components/OfflineSyncManager";
 
 // New Sub-components
 import { MetricCards } from "@/components/branchDashboardComponents/MetricCards";
@@ -16,8 +19,15 @@ const KADIKOY_BRANCH_ID = '11111111-1111-1111-1111-111111111111';
 
 export default function BranchManagerDashboard() {
     const [branchId, setBranchId] = useState(null);
+    const [companyId, setCompanyId] = useState(null);
     const [branchName, setBranchName] = useState("Loading...");
     const [isTestOrderModalOpen, setIsTestOrderModalOpen] = useState(false);
+    
+    // Using Dexie for POS-critical offline data
+    const orders = useLiveQuery(() => branchId ? db.orders.where('branch_id').equals(branchId).reverse().sortBy('created_at') : [], [branchId]);
+    const orderItems = useLiveQuery(() => db.orderItems.toArray(), []);
+    const stock = useLiveQuery(() => branchId ? db.branchStock.where('branch_id').equals(branchId).toArray() : [], [branchId]);
+    const products = useLiveQuery(() => db.products.toArray(), []);
     
     const [todaysIncome, setTodaysIncome] = useState(0);
     const [totalOrders, setTotalOrders] = useState(0);
@@ -35,12 +45,13 @@ export default function BranchManagerDashboard() {
                 if (session?.user) {
                     const { data: dbUser } = await supabase
                         .from('users')
-                        .select('branch_id')
+                        .select('branch_id, company_id')
                         .eq('id', session.user.id)
                         .maybeSingle();
                         
                     if (dbUser?.branch_id) {
                         setBranchId(dbUser.branch_id);
+                        setCompanyId(dbUser.company_id);
                         return;
                     }
                 }
@@ -54,26 +65,47 @@ export default function BranchManagerDashboard() {
         resolveBranch();
     }, []);
 
-    // Set up real-time subscriptions and data fetching on branchId resolve
+    // Set up Real-time computations from Dexie
+    useEffect(() => {
+        if (orders) {
+            setTotalOrders(orders.length);
+            setTodaysIncome(orders.reduce((sum, o) => sum + (o.total_amount || 0), 0));
+            setRecentOrders(orders.slice(0, 15));
+            
+            if (orderItems) {
+                const orderIds = new Set(orders.map(o => o.id));
+                const filteredItems = orderItems.filter(item => orderIds.has(item.order_id));
+                setItemsSold(filteredItems.reduce((sum, item) => sum + (item.quantity || 1), 0));
+            }
+        }
+
+        if (stock && products) {
+            const mappedStock = stock
+                .filter(s => s.stock_quantity < 20)
+                .map(s => {
+                    const product = products.find(p => p.id === s.product_id);
+                    return {
+                        ...s,
+                        products: { name: product?.name || 'Unknown' }
+                    };
+                })
+                .sort((a, b) => a.stock_quantity - b.stock_quantity);
+            setInventoryAlerts(mappedStock);
+        }
+    }, [orders, orderItems, stock, products]);
+
+    // Set up real-time subscriptions and data fetching on branchId resolve (for non-offline data)
     useEffect(() => {
         if (!branchId) return;
         
-        fetchDashboardData();
+        fetchStaffData();
+        fetchBranchName();
 
-        // 🟢 Set up Supabase Real-time Subscriptions for Live Mode
+        // 🟢 Set up Supabase Real-time Subscriptions for Live Mode (staff only)
         const channel = supabase
-            .channel('dashboard-changes')
-            // Listen for new/updated orders
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-                fetchDashboardData();
-            })
-            // Listen for staff clocking in/out
+            .channel('dashboard-staff')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'employee_shifts' }, () => {
-                fetchDashboardData();
-            })
-            // Listen for inventory stock changes
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'branch_stock' }, () => {
-                fetchDashboardData();
+                fetchStaffData();
             })
             .subscribe();
 
@@ -83,47 +115,14 @@ export default function BranchManagerDashboard() {
         };
     }, [branchId]);
 
-    const fetchDashboardData = async () => {
+    const fetchBranchName = async () => {
+        const { data: branchData } = await supabase.from('branches').select('name').eq('id', branchId).maybeSingle();
+        if (branchData) setBranchName(branchData.name);
+    };
+
+    const fetchStaffData = async () => {
         if (!branchId) return;
         try {
-            // 1. Get Branch Name
-            const { data: branchData } = await supabase
-                .from('branches')
-                .select('name')
-                .eq('id', branchId)
-                .single();
-            if (branchData) setBranchName(branchData.name);
-            else setBranchName("Branch Store");
-
-            // 2. Get All Orders (TESTING: Removed Date Filter)
-            const { data: orders } = await supabase
-                .from('orders')
-                .select('id, total_amount, created_at, status, order_type')
-                .eq('branch_id', branchId)
-                .order('created_at', { ascending: false });
-
-            if (orders && orders.length > 0) {
-                setTotalOrders(orders.length);
-                setTodaysIncome(orders.reduce((sum, o) => sum + (o.total_amount || 0), 0));
-                setRecentOrders(orders.slice(0, 15));
-                
-                // 3. Get Items Sold
-                const orderIds = orders.map(o => o.id);
-                const { data: orderItems } = await supabase
-                    .from('order_items')
-                    .select('quantity')
-                    .in('order_id', orderIds);
-                    
-                if (orderItems) {
-                    setItemsSold(orderItems.reduce((sum, item) => sum + (item.quantity || 1), 0));
-                }
-            } else {
-                setTotalOrders(0);
-                setTodaysIncome(0);
-                setItemsSold(0);
-                setRecentOrders([]);
-            }
-
             // 4. Get All Team Members for this branch
             const { data: teamMembers } = await supabase
                 .from('users')
@@ -158,22 +157,8 @@ export default function BranchManagerDashboard() {
             } else {
                 setOnDutyStaff([]);
             }
-
-            // 5. Get Inventory Alerts
-            const { data: stock } = await supabase
-                .from('branch_stock')
-                .select('stock_quantity, products(name)')
-                .eq('branch_id', branchId)
-                .lt('stock_quantity', 20)
-                .order('stock_quantity', { ascending: true });
-                
-            if (stock && stock.length > 0) {
-                setInventoryAlerts(stock);
-            } else {
-                setInventoryAlerts([]);
-            }
         } catch (error) {
-            console.error("Error fetching dashboard data:", error);
+            console.error("Error fetching staff data:", error);
         }
     };
 
@@ -244,6 +229,8 @@ export default function BranchManagerDashboard() {
                 branchId={branchId}
                 branchName={branchName}
             />
+
+            <OfflineSyncManager branchId={branchId} companyId={companyId} />
         </div>
     );
 }

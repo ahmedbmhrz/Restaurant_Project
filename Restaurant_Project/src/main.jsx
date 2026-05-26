@@ -76,12 +76,32 @@ const selfHealUser = async (session) => {
     }
 };
 
-// Global Fetch Interceptor to inject SaaS Tenant ID
+// Global Fetch Interceptor to inject SaaS Tenant ID and rewrite API URLs
 const originalFetch = window.fetch;
 window.fetch = async (...args) => {
     let [resource, config] = args;
     
     if (typeof resource === 'string' && (resource.startsWith('/api') || resource.startsWith('http://localhost:5000/api'))) {
+        
+        // --- API URL Rewriting Logic ---
+        const isElectron = navigator.userAgent.toLowerCase().includes(' electron/');
+        const isDev = import.meta.env.DEV;
+        
+        // If Electron Prod -> use Render URL
+        // If Web Prod -> use relative paths (Render handles it)
+        const API_BASE_URL = isElectron && !isDev 
+            ? 'https://nexus-fullstack.onrender.com' 
+            : (!isElectron && !isDev ? '' : 'http://localhost:5000');
+
+        if (resource.startsWith('http://localhost:5000')) {
+            // Replace localhost with our target base URL (which might be empty string for relative paths in web prod)
+            resource = resource.replace('http://localhost:5000', API_BASE_URL);
+        } else if (resource.startsWith('/api') && isElectron) {
+            // If it's a relative path in electron, we MUST make it absolute
+            resource = API_BASE_URL + resource;
+        }
+        // --------------------------------
+
         const { data: { session } } = await supabase.auth.getSession();
         
         if (session?.user) {

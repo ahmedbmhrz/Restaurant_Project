@@ -11,13 +11,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingBag, Plus, Minus, ReceiptText, Download, CheckCircle2, Building2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { db } from '../../lib/db';
+import { useLiveQuery } from 'dexie-react-hooks';
 import * as htmlToImage from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
 export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
-    const [products, setProducts] = useState([]);
+    const products = useLiveQuery(() => db.products.toArray(), []) || [];
     const [cart, setCart] = useState({});
-    const [loading, setLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
     // Receipt State
@@ -25,38 +26,11 @@ export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
     const receiptRef = useRef(null);
 
     useEffect(() => {
-        if (isOpen && !completedOrder) {
-            fetchProducts();
+        if (!isOpen) {
+            setCompletedOrder(null);
+            setCart({});
         }
-    }, [isOpen, completedOrder]);
-
-    const fetchProducts = async () => {
-        setLoading(true);
-        try {
-            const { data: { session } } = await supabase.auth.getSession();
-            const companyId = session?.user?.user_metadata?.company_id;
-
-            let query = supabase
-                .from('products')
-                .select('*')
-                .eq('is_active', true);
-
-            if (companyId) {
-                query = query.eq('company_id', companyId);
-            } else {
-                query = query.eq('id', '00000000-0000-0000-0000-000000000000');
-            }
-
-            const { data, error } = await query;
-            if (!error && data) {
-                setProducts(data);
-            }
-        } catch (error) {
-            console.error("Error fetching products:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    }, [isOpen]);
 
     const updateQuantity = (productId, delta) => {
         setCart(prev => {
@@ -94,65 +68,64 @@ export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
             const { data: { session } } = await supabase.auth.getSession();
             const companyId = session?.user?.user_metadata?.company_id;
 
-            // 1. Insert Order
-            const { data: orderData, error: orderError } = await supabase
-                .from('orders')
-                .insert([{
-                    branch_id: branchId,
-                    company_id: companyId || null,
-                    total_amount: total,
-                    tax_amount: tax,
-                    tip_amount: 0,
-                    status: 'Completed',
-                    order_type: 'Dine-in'
-                }])
-                .select()
-                .single();
+            // Generate an offline-friendly UUID
+            const orderId = crypto.randomUUID();
 
-            if (orderError) throw orderError;
+            // 1. Prepare Order Object
+            const orderData = {
+                id: orderId,
+                branch_id: branchId,
+                company_id: companyId || null,
+                total_amount: total,
+                tax_amount: tax,
+                tip_amount: 0,
+                status: 'Completed',
+                order_type: 'Dine-in',
+                created_at: new Date().toISOString()
+            };
 
-            // 2. Insert Order Items
+            // 2. Prepare Items
             const orderItemsInsert = itemsToInsert.map(item => ({
-                order_id: orderData.id,
+                order_id: orderId,
                 product_id: item.product_id,
                 quantity: item.quantity,
                 unit_price: item.price_at_time
             }));
 
-            const { error: itemsError } = await supabase
-                .from('order_items')
-                .insert(orderItemsInsert);
-
-            if (itemsError) throw itemsError;
-
-            // 3. Deduct Stock
+            // 3. Prepare Stock Updates
             const productIds = itemsToInsert.map(i => i.product_id);
-            const { data: currentStock, error: stockFetchError } = await supabase
-                .from('branch_stock')
-                .select('*')
-                .eq('branch_id', branchId)
-                .in('product_id', productIds);
-
-            if (!stockFetchError && currentStock) {
-                const updatedStock = currentStock.map(stockRow => {
-                    const orderedItem = itemsToInsert.find(i => i.product_id === stockRow.product_id);
-                    if (orderedItem) {
-                        return {
-                            ...stockRow,
-                            stock_quantity: Math.max(0, stockRow.stock_quantity - orderedItem.quantity)
-                        };
-                    }
-                    return stockRow;
-                });
-
-                if (updatedStock.length > 0) {
-                    const { error: stockUpdateError } = await supabase
-                        .from('branch_stock')
-                        .upsert(updatedStock);
-                    
-                    if (stockUpdateError) console.error("Error updating stock:", stockUpdateError);
+            const currentStock = await db.branchStock.where('product_id').anyOf(productIds).toArray();
+            
+            const updatedStock = currentStock.map(stockRow => {
+                const orderedItem = itemsToInsert.find(i => i.product_id === stockRow.product_id);
+                if (orderedItem) {
+                    return {
+                        ...stockRow,
+                        stock_quantity: Math.max(0, stockRow.stock_quantity - orderedItem.quantity)
+                    };
                 }
+                return stockRow;
+            });
+
+            // Write to Local DB Instantly
+            await db.orders.add(orderData);
+            if (orderItemsInsert.length > 0) {
+                await db.orderItems.bulkAdd(orderItemsInsert);
             }
+            if (updatedStock.length > 0) {
+                await db.branchStock.bulkPut(updatedStock);
+            }
+
+            // Push to Sync Queue
+            await db.syncQueue.add({
+                action: 'CREATE_ORDER',
+                payload: {
+                    order: orderData,
+                    items: orderItemsInsert,
+                    stockUpdates: updatedStock
+                },
+                created_at: new Date().toISOString()
+            });
 
             // Prepare Receipt Data
             setCompletedOrder({
@@ -245,9 +218,9 @@ export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
                         <div className="flex-1 overflow-hidden flex">
                             {/* Products List */}
                             <div className="flex-1 bg-white p-6 overflow-y-auto custom-scrollbar">
-                                {loading ? (
-                                    <div className="h-full flex items-center justify-center">
-                                        <span className="h-6 w-6 animate-spin rounded-full border-2 border-indigo-300 border-t-indigo-600" />
+                                {!products || products.length === 0 ? (
+                                    <div className="h-full flex items-center justify-center text-slate-400 font-bold">
+                                        Loading or No Products Available...
                                     </div>
                                 ) : (
                                     <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
