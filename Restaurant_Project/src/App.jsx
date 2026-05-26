@@ -14,12 +14,41 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 function RootRoute() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [userRole, setUserRole] = useState(null);
+
+  const isElectron = navigator.userAgent.toLowerCase().includes(' electron/');
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          setUser(session.user);
+          
+          // Check user role in the database
+          const { data: dbUser } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', session.user.id)
+            .maybeSingle();
+            
+          if (dbUser?.role === 'Branch Manager') {
+            setUserRole('branch_manager');
+          } else {
+            setUserRole('hq_manager');
+          }
+        } else {
+          setUser(null);
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkSession();
   }, []);
 
   if (loading) {
@@ -30,7 +59,18 @@ function RootRoute() {
     );
   }
 
-  return user ? <Navigate to="/home" /> : <Navigate to="/login" />;
+  // If not logged in: desktop app goes to branch login, web goes to HQ login
+  if (!user) {
+    return isElectron ? <Navigate to="/branch-login" /> : <Navigate to="/login" />;
+  }
+  
+  // If logged in: desktop app always goes to branch dashboard
+  if (isElectron) {
+    return <Navigate to="/branch-dashboard" />;
+  }
+
+  // Web users go to branch dashboard ONLY if they are explicitly a branch manager
+  return userRole === 'branch_manager' ? <Navigate to="/branch-dashboard" /> : <Navigate to="/home" />;
 }
 
 function App() {
