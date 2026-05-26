@@ -1,9 +1,26 @@
 {
   "name": "restaurant-project",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Nexus Food Branch Manager POS",
+  "author": "Nexus Food",
   "type": "module",
   "main": "electron/main.js",
+  "build": {
+    "appId": "com.nexusfood.pos",
+    "productName": "Nexus POS",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "dev:all": "concurrently --kill-others \"npm run dev\" \"npm run dev --prefix backend\" \"python app.py\" --names \"VITE,NODE,FLASK\" --prefix-colors \"cyan,green,yellow\"",
