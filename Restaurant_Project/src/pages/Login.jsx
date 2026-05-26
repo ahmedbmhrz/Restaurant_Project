@@ -23,7 +23,7 @@ export default function Login() {
               Log in to Nexus Food
             </CardTitle>
             <CardDescription className="text-slate-400 font-medium text-xs uppercase tracking-widest">
-              Security by Antigravity AI
+              Welcome! Please enter your details
             </CardDescription>
           </CardHeader>
           <CardContent className="px-8 pb-8">
