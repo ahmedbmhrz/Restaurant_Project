@@ -3,6 +3,7 @@ services:
   - type: web
     name: nexus-ai
     env: python
+    plan: free
     rootDir: Restaurant_Project
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
@@ -18,6 +19,7 @@ services:
   - type: web
     name: nexus-fullstack
     env: node
+    plan: free
     rootDir: Restaurant_Project
     # Build frontend first, then build/install backend
     buildCommand: npm install && npm run build && cd backend && npm install
