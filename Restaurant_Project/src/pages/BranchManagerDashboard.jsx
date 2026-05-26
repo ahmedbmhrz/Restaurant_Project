@@ -190,7 +190,7 @@ export default function BranchManagerDashboard() {
 
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200">
-            <BranchNavbar branchName={branchName} />
+            <BranchNavbar branchName={branchName} branchId={branchId} />
             
             <main className="flex-1 p-4 lg:p-8 max-w-7xl mx-auto w-full flex flex-col gap-8">
                 

@@ -18,13 +18,14 @@ const typeConfig = {
     info: { icon: Info, color: "text-blue-600", bg: "bg-blue-100" },
 }
 
-export function BranchNotificationCenter() {
+export function BranchNotificationCenter({ branchId }) {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const fetchNotifications = async () => {
         try {
-            const res = await fetch('/api/notifications');
+            const url = branchId ? `/api/notifications?branchId=${branchId}` : '/api/notifications';
+            const res = await fetch(url);
             const data = await res.json();
             
             const lastClear = localStorage.getItem('nexus_branch_notif_last_clear');
@@ -45,7 +46,7 @@ export function BranchNotificationCenter() {
 
     useEffect(() => {
         fetchNotifications();
-    }, []);
+    }, [branchId]);
 
     const handleClearAll = () => {
         localStorage.setItem('nexus_branch_notif_last_clear', new Date().toISOString());

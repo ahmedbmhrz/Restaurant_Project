@@ -1,0 +1,34 @@
+services:
+  # 1. Python ML Service (AI Forecasting)
+  - type: web
+    name: nexus-ai
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.0
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+
+  # 2. Fullstack Node Web Service (Serves API + Frontend)
+  - type: web
+    name: nexus-fullstack
+    env: node
+    # Build frontend first, then build/install backend
+    buildCommand: npm install && npm run build && cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: PYTHON_ML_URL
+        fromService:
+          type: web
+          name: nexus-ai
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false

@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { supabase } from "../lib/supabase"
 import { Link } from "react-router-dom"
 
-export function BranchNavbar({ branchName }) {
+export function BranchNavbar({ branchName, branchId }) {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
@@ -47,7 +47,7 @@ export function BranchNavbar({ branchName }) {
                 <div className="ml-auto flex items-center gap-2">
                     {user ? (
                         <>
-                            <BranchNotificationCenter />
+                            <BranchNotificationCenter branchId={branchId} />
                             <BranchUserProfile user={user} branchName={branchName} />
                         </>
                     ) : (

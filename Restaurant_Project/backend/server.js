@@ -1,6 +1,11 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Import Routers
 import branchesRouter from './routes/branches.js';
@@ -20,11 +25,6 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// A basic route to test the server
-app.get('/', (req, res) => {
-    res.send('Restaurant Backend is running!');
-});
-
 // Route Mounting
 app.use('/api/stats', statsRouter);
 app.use('/api', productsRouter); // Handles /api/products and /api/branch-stock
@@ -33,6 +33,14 @@ app.use('/api', notificationsRouter); // Handles /api/notifications
 app.use('/api/predict', predictionsRouter); // Handles /api/predict/sales-forecast and /api/predict/busy-hours
 app.use('/api/search', searchRouter);
 app.use('/api', branchesRouter); // Wildcard router mounted last to prevent routing conflicts
+
+// Serve frontend in production
+app.use(express.static(path.join(__dirname, '../dist')));
+
+// Catch-all route to serve the React app for any unhandled routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
 
 // Start the server
 app.listen(PORT, () => {

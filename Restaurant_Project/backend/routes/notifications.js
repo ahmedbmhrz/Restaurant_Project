@@ -9,9 +9,13 @@ router.get('/notifications', async (req, res) => {
         let notifId = 1;
         
         const companyId = req.headers['x-company-id'];
+        const branchId = req.query.branchId;
+
         let branchIds = [];
         
-        if (companyId) {
+        if (branchId) {
+            branchIds = [branchId];
+        } else if (companyId) {
             const { data: companyBranches } = await supabase
                 .from('branches')
                 .select('id')
@@ -33,9 +37,9 @@ router.get('/notifications', async (req, res) => {
             .order('stock_quantity', { ascending: true })
             .limit(10);
             
-        if (companyId) {
+        if (branchIds.length > 0) {
             stockQuery = stockQuery.in('branch_id', branchIds);
-        } else {
+        } else if (!companyId && !branchId) {
             stockQuery = stockQuery.eq('branch_id', '00000000-0000-0000-0000-000000000000');
         }
 
@@ -66,7 +70,9 @@ router.get('/notifications', async (req, res) => {
             .order('created_at', { ascending: false })
             .limit(20);
 
-        if (companyId) {
+        if (branchId) {
+            ordersQuery = ordersQuery.eq('branch_id', branchId);
+        } else if (companyId) {
             ordersQuery = ordersQuery.eq('company_id', companyId);
         } else {
             ordersQuery = ordersQuery.eq('company_id', '00000000-0000-0000-0000-000000000000');
