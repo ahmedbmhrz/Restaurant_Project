@@ -84,7 +84,7 @@ window.fetch = async (...args) => {
     if (typeof resource === 'string' && (resource.startsWith('/api') || resource.startsWith('http://localhost:5000/api'))) {
         
         // --- API URL Rewriting Logic ---
-        const isElectron = navigator.userAgent.toLowerCase().includes(' electron/');
+        const isElectron = navigator.userAgent.toLowerCase().includes('electron');
         const isDev = import.meta.env.DEV;
         
         // If Electron Prod -> use Render URL
