@@ -12,3 +12,7 @@ db.version(1).stores({
   // Sync Queue: stores operations that need to be pushed to Supabase when online
   syncQueue: '++id, action, payload, created_at' 
 });
+
+db.version(2).stores({
+  branchStock: '[branch_id+product_id], branch_id, product_id, stock_quantity'
+});
