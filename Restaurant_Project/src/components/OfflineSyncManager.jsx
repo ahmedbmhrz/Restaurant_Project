@@ -1,11 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { db } from '../lib/db';
+import { useLiveQuery } from 'dexie-react-hooks';
 import { Wifi, WifiOff, RefreshCcw } from 'lucide-react';
 
 export function OfflineSyncManager({ branchId, companyId }) {
     const [isOnline, setIsOnline] = useState(navigator.onLine);
     const [isSyncing, setIsSyncing] = useState(false);
+    const pendingTasksCount = useLiveQuery(() => db.syncQueue.count(), []) || 0;
+
+    // Auto-sync when tasks are added and we are online
+    useEffect(() => {
+        if (isOnline && pendingTasksCount > 0 && !isSyncing) {
+            syncQueueToSupabase();
+        }
+    }, [isOnline, pendingTasksCount, isSyncing]);
 
     useEffect(() => {
         const handleOnline = async () => {
