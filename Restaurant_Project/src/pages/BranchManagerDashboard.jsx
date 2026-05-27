@@ -54,12 +54,34 @@ export default function BranchManagerDashboard() {
                         setCompanyId(dbUser.company_id);
                         return;
                     }
+                    
+                    // Fallback: If HQ Admin, get their first branch
+                    if (dbUser?.company_id) {
+                        const { data: firstBranch } = await supabase
+                            .from('branches')
+                            .select('id, company_id')
+                            .eq('company_id', dbUser.company_id)
+                            .limit(1)
+                            .maybeSingle();
+                            
+                        if (firstBranch) {
+                            setBranchId(firstBranch.id);
+                            setCompanyId(firstBranch.company_id);
+                            return;
+                        }
+                    }
                 }
-                // Fallback to Kadikoy Central
-                setBranchId(KADIKOY_BRANCH_ID);
+                
+                // Absolute fallback if everything fails
+                const { data: absoluteFallback } = await supabase.from('branches').select('id, company_id').limit(1).maybeSingle();
+                if (absoluteFallback) {
+                    setBranchId(absoluteFallback.id);
+                    setCompanyId(absoluteFallback.company_id);
+                } else {
+                    setBranchId(KADIKOY_BRANCH_ID); // Empty DB
+                }
             } catch (e) {
                 console.error("Failed to resolve branch context:", e);
-                setBranchId(KADIKOY_BRANCH_ID);
             }
         };
         resolveBranch();
@@ -81,7 +103,6 @@ export default function BranchManagerDashboard() {
 
         if (stock && products) {
             const mappedStock = stock
-                .filter(s => s.stock_quantity < 20)
                 .map(s => {
                     const product = products.find(p => p.id === s.product_id);
                     return {
