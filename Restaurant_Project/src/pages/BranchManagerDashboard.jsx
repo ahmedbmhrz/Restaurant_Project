@@ -101,16 +101,15 @@ export default function BranchManagerDashboard() {
             }
         }
 
-        if (stock && products) {
-            const mappedStock = stock
-                .map(s => {
-                    const product = products.find(p => p.id === s.product_id);
-                    return {
-                        ...s,
-                        products: { name: product?.name || 'Unknown' }
-                    };
-                })
-                .sort((a, b) => a.stock_quantity - b.stock_quantity);
+        if (products) {
+            const mappedStock = products.map(product => {
+                const stockItem = stock?.find(s => s.product_id === product.id);
+                return {
+                    product_id: product.id,
+                    stock_quantity: stockItem ? stockItem.stock_quantity : 0,
+                    products: { name: product.name }
+                };
+            }).sort((a, b) => a.stock_quantity - b.stock_quantity);
             setInventoryAlerts(mappedStock);
         }
     }, [orders, orderItems, stock, products]);
