@@ -8,10 +8,10 @@ export function OfflineSyncManager({ branchId, companyId }) {
     const [isSyncing, setIsSyncing] = useState(false);
 
     useEffect(() => {
-        const handleOnline = () => {
+        const handleOnline = async () => {
             setIsOnline(true);
-            syncQueueToSupabase();
-            fetchDataToDexie();
+            await syncQueueToSupabase();
+            await fetchDataToDexie();
         };
         const handleOffline = () => setIsOnline(false);
 
@@ -20,8 +20,10 @@ export function OfflineSyncManager({ branchId, companyId }) {
 
         // Initial sync on load if online
         if (navigator.onLine && branchId) {
-            fetchDataToDexie();
-            syncQueueToSupabase();
+            (async () => {
+                await syncQueueToSupabase();
+                await fetchDataToDexie();
+            })();
         }
 
         return () => {
