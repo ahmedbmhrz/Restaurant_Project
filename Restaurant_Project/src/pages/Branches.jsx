@@ -7,6 +7,7 @@ import { Building2, ArrowRight, Check, Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { supabase } from '../lib/supabase'
 
 function Branches() {
     const location = useLocation();
@@ -98,8 +99,29 @@ function Branches() {
         };
         window.addEventListener('quickActionComplete', handleQuickAction);
         
+        // Setup Supabase Real-time Subscriptions to make the HQ Dashboard LIVE
+        const channel = supabase
+            .channel('hq-branches-dashboard')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+                fetchPageData();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'branches' }, () => {
+                fetchPageData();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'branch_stock' }, () => {
+                fetchPageData();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'users' }, () => {
+                fetchPageData();
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'employee_shifts' }, () => {
+                fetchPageData();
+            })
+            .subscribe();
+
         return () => {
             window.removeEventListener('quickActionComplete', handleQuickAction);
+            supabase.removeChannel(channel);
         };
     }, [selectedBranchId]); 
 
