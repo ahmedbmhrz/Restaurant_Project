@@ -3,7 +3,7 @@ import { ManagersnBranch } from "../components/branchesComponents/ManagersnBranc
 import { BranchTabs } from "../components/branchesComponents/BranchTabs"
 import { useState, useEffect } from "react"
 import { useLocation } from "react-router-dom"
-import { Building2, ArrowRight, Check, Copy } from "lucide-react"
+import { Building2, ArrowRight, Check, Copy, RefreshCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -254,9 +254,20 @@ function Branches() {
             <main className="flex-1 p-4 md:p-8 flex flex-col gap-6 h-[calc(100vh-64px)] overflow-hidden w-full">
                 
                 {/* Clean Header */}
-                <div className="flex-none pb-2 pl-2">
-                    <h2 className="text-4xl font-extrabold tracking-tight text-slate-800">Branch Insights</h2>
-                    <p className="text-sm font-medium text-slate-500 mt-1">Manage and monitor all regional locations</p>
+                <div className="flex-none pb-2 pl-2 pr-4 flex justify-between items-start">
+                    <div>
+                        <h2 className="text-4xl font-extrabold tracking-tight text-slate-800">Branch Insights</h2>
+                        <p className="text-sm font-medium text-slate-500 mt-1">Manage and monitor all regional locations</p>
+                    </div>
+                    <Button 
+                        variant="outline" 
+                        onClick={() => fetchPageData()} 
+                        disabled={isFetching}
+                        className="flex items-center gap-2 bg-white/60 border-slate-200 hover:bg-white shadow-sm rounded-xl text-slate-600 font-bold"
+                    >
+                        <RefreshCcw className={`h-4 w-4 ${isFetching ? 'animate-spin text-indigo-500' : ''}`} />
+                        {isFetching ? 'Syncing...' : 'Refresh Data'}
+                    </Button>
                 </div>
 
                 <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0 overflow-hidden w-full">
