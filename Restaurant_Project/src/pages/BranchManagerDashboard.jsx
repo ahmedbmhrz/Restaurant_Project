@@ -213,7 +213,7 @@ export default function BranchManagerDashboard() {
                         className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-12 px-6 font-bold tracking-wide shadow-md shadow-indigo-200 gap-2"
                     >
                         <PlusCircle className="h-5 w-5" />
-                        Create Test Order
+                        Create Order
                     </Button>
                 </div>
 

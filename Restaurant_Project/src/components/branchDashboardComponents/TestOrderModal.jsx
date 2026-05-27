@@ -208,7 +208,7 @@ export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
                                     <ShoppingBag className="h-6 w-6" />
                                 </div>
                                 <div>
-                                    <DialogTitle className="text-2xl font-black text-slate-800">Create Test Order</DialogTitle>
+                                    <DialogTitle className="text-2xl font-black text-slate-800">Create Order</DialogTitle>
                                     <DialogDescription className="text-slate-500 font-medium">Select items to generate a live test order for {branchName}.</DialogDescription>
                                 </div>
                             </div>
