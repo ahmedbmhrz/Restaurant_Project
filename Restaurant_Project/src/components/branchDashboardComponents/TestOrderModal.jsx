@@ -17,7 +17,11 @@ import * as htmlToImage from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
 export function TestOrderModal({ isOpen, onOpenChange, branchId, branchName }) {
-    const products = useLiveQuery(() => db.products.toArray(), []) || [];
+    const allProducts = useLiveQuery(() => db.products.toArray(), []) || [];
+    const branchStock = useLiveQuery(() => db.branchStock.where('branch_id').equals(branchId).toArray(), [branchId]) || [];
+    
+    // Only show products that have a stock record at this branch
+    const products = allProducts.filter(p => branchStock.some(s => s.product_id === p.id));
     const [cart, setCart] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     
