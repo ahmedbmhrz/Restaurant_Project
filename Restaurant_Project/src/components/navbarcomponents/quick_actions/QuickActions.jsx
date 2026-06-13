@@ -74,11 +74,7 @@ export function QuickActions() {
                             <span className="text-[10px] text-muted-foreground">Grow your empire</span>
                         </div>
                     </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer text-xs font-medium justify-center py-2 text-primary hover:bg-primary/5">
-                        <PlusCircle className="mr-2 h-3 w-3" />
-                        View All Actions
-                    </DropdownMenuItem>
+
                 </DropdownMenuContent>
             </DropdownMenu>
 

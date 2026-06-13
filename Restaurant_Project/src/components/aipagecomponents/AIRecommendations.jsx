@@ -6,8 +6,10 @@ import {
 } from "@/components/ui/card"
 import { Sparkles, TrendingUp, Users, ShoppingBag, AlertTriangle, DollarSign } from "lucide-react"
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 
 export function AIRecommendations({ selectedBranch = "all", branchName = "All Branches" }) {
+    const navigate = useNavigate();
     const [recommendations, setRecommendations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -144,8 +146,11 @@ export function AIRecommendations({ selectedBranch = "all", branchName = "All Br
                                 <span className={`text-xs font-bold px-2 py-1 rounded bg-white/60 ${rec.textColor}`}>
                                     {rec.trend}
                                 </span>
-                                {rec.action && (
-                                    <button className={`text-xs font-semibold flex items-center gap-1 hover:underline ${rec.textColor}`}>
+                                {rec.action && selectedBranch !== "all" && (
+                                    <button 
+                                        onClick={() => navigate('/branches', { state: { targetBranchId: selectedBranch } })}
+                                        className={`text-xs font-semibold flex items-center gap-1 hover:underline ${rec.textColor}`}
+                                    >
                                         {rec.action}
                                     </button>
                                 )}
