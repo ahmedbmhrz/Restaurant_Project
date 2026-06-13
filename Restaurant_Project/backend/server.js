@@ -38,7 +38,7 @@ app.use('/api', branchesRouter); // Wildcard router mounted last to prevent rout
 app.use(express.static(path.join(__dirname, '../dist')));
 
 // Catch-all route to serve the React app for any unhandled routes
-app.get('*', (req, res) => {
+app.use((req, res) => {
     res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 
