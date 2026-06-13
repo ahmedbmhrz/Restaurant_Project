@@ -28,15 +28,21 @@ def predict_sales():
             avg = np.mean(sales_values) if sales_values else 1000
             forecast = [avg * (1 + i * 0.02) for i in range(days)]  # 2% growth
         else:
-            # Convert to pandas Series
-            series = pd.Series(sales_values)
-            
-            # ARIMA model (5,1,0) - good for sales forecasting
-            model = ARIMA(series, order=(5, 1, 0))
-            model_fit = model.fit()
-            
-            # Generate forecast
-            forecast = model_fit.forecast(steps=days).tolist()
+            # Check if there is zero variance (e.g. all 0s or all same number)
+            # ARIMA will crash with a LinAlgError if the data is perfectly flat
+            if np.std(sales_values) == 0:
+                val = sales_values[0] if sales_values else 0
+                forecast = [val] * days
+            else:
+                # Convert to pandas Series
+                series = pd.Series(sales_values)
+                
+                # ARIMA model (5,1,0) - good for sales forecasting
+                model = ARIMA(series, order=(5, 1, 0))
+                model_fit = model.fit()
+                
+                # Generate forecast
+                forecast = model_fit.forecast(steps=days).tolist()
         
         return jsonify({
             "status": "success",
@@ -205,5 +211,8 @@ def generate_insights():
 def health():
     return jsonify({"status": "healthy", "service": "ML Predictions"})
 
+import os
+
 if __name__ == "__main__":
-    app.run(debug=True, port=5001, host='0.0.0.0')
+    port = int(os.environ.get("PORT", 5001))
+    app.run(debug=False, port=port, host='0.0.0.0')
