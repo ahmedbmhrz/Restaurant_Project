@@ -30,6 +30,21 @@ export function LoginForm() {
         throw error;
       }
 
+      // Check user role in the public.users table
+      const { data: profile, error: profileErr } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', data.user.id)
+        .maybeSingle();
+
+      if (profileErr) throw profileErr;
+
+      // Prevent Branch Managers from accessing HQ Dashboard
+      if (profile?.role === 'Branch Manager' || profile?.role === 'Branch_Manager') {
+        await supabase.auth.signOut();
+        throw new Error("Access Denied: HQ Dashboard restricted to Corporate Administrators. Please use the Desktop POS Application.");
+      }
+
       // Success! Redirect to the dashboard
       navigate("/")
     } catch (error) {
