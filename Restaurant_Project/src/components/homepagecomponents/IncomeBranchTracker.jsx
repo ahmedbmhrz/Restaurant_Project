@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { ChartContainer } from "@/components/ui/chart"
 import { Bar, BarChart, XAxis, Cell } from "recharts"
 import { TrendingUp, MapPin } from "lucide-react"
@@ -11,7 +12,7 @@ const chartConfig = {
 }
 
 export function IncomeBranchTracker() {
-
+    const navigate = useNavigate()
     const [chartData, setChartData] = useState([])
     const [activeBranch, setActiveBranch] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -101,7 +102,28 @@ export function IncomeBranchTracker() {
                                 tickLine={false}
                                 tickMargin={10}
                                 axisLine={false}
-                                className="text-[10px] font-bold fill-slate-400"
+                                tick={({ x, y, payload }) => {
+                                    return (
+                                        <text
+                                            x={x}
+                                            y={y + 15}
+                                            textAnchor="middle"
+                                            fill="#94a3b8"
+                                            className="text-[10px] font-bold cursor-pointer transition-colors"
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={() => {
+                                                const branch = chartData.find(b => b.branchName === payload.value);
+                                                if (branch && branch.id) {
+                                                    navigate('/branches', { state: { targetBranchId: branch.id } });
+                                                }
+                                            }}
+                                            onMouseEnter={(e) => e.target.setAttribute('fill', '#00ADB5')}
+                                            onMouseLeave={(e) => e.target.setAttribute('fill', '#94a3b8')}
+                                        >
+                                            {payload.value}
+                                        </text>
+                                    );
+                                }}
                             />
                             <Bar
                                 dataKey="income"
