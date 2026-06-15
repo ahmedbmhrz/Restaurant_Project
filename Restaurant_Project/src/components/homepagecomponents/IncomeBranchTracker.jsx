@@ -96,7 +96,7 @@ export function IncomeBranchTracker() {
                 {/* Right Side: Chart */}
                 <div className="flex-1 w-full h-full min-h-[220px] flex items-end">
                     <ChartContainer config={chartConfig} className="w-full h-full max-h-[260px]">
-                        <BarChart accessibilityLayer data={chartData} margin={{ top: 20 }}>
+                        <BarChart accessibilityLayer data={chartData} margin={{ top: 20, bottom: 20 }}>
                             <XAxis
                                 dataKey="branchName"
                                 tickLine={false}
