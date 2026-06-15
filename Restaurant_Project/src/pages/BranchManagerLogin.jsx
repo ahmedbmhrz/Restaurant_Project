@@ -72,7 +72,7 @@ export default function BranchManagerLogin() {
         setSuccessMsg('');
         
         try {
-            const res = await fetch("http://localhost:5000/api/branch-manager/activate-terminal", {
+            const res = await fetch("/api/branch-manager/activate-terminal", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

@@ -81,7 +81,7 @@ const originalFetch = window.fetch;
 window.fetch = async (...args) => {
     let [resource, config] = args;
     
-    if (typeof resource === 'string' && (resource.startsWith('/api') || resource.startsWith('http://localhost:5000/api'))) {
+    if (typeof resource === 'string' && (resource.startsWith('/api') || resource.startsWith('http://127.0.0.1:5000/api') || resource.startsWith('http://localhost:5000/api'))) {
         
         // --- API URL Rewriting Logic ---
         const isElectron = navigator.userAgent.toLowerCase().includes('electron');
@@ -90,12 +90,12 @@ window.fetch = async (...args) => {
         // If Electron Prod -> use Render URL
         // If Web Prod -> use relative paths (Render handles it)
         const API_BASE_URL = isElectron && !isDev 
-            ? 'https://nexus-fullstack.onrender.com' 
-            : (!isElectron && !isDev ? '' : 'http://localhost:5000');
+            ? 'https://nexus-fullstack-e7cc.onrender.com' 
+            : (!isElectron && !isDev ? '' : 'http://127.0.0.1:5000');
 
-        if (resource.startsWith('http://localhost:5000')) {
+        if (resource.startsWith('http://localhost:5000') || resource.startsWith('http://127.0.0.1:5000')) {
             // Replace localhost with our target base URL (which might be empty string for relative paths in web prod)
-            resource = resource.replace('http://localhost:5000', API_BASE_URL);
+            resource = resource.replace('http://localhost:5000', API_BASE_URL).replace('http://127.0.0.1:5000', API_BASE_URL);
         } else if (resource.startsWith('/api') && isElectron) {
             // If it's a relative path in electron, we MUST make it absolute
             resource = API_BASE_URL + resource;
